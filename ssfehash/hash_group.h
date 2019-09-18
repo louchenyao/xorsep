@@ -106,9 +106,9 @@ class HashGroup {
 
     std::tuple<uint32_t, uint32_t, uint32_t> hash(KEY_TYPE k) {
         // TODO (Chenyao): Replace them with more decent hash functions
-        uint32_t h1 = (k ^ seed1_ ^ 2333 + 11) % m_;
-        uint32_t h2 = (k ^ seed2_ ^ 23333 + 3) % m_;
-        uint32_t h3 = (k ^ seed3_ ^ 233333 + 7) % m_;
+        uint32_t h1 = ((k ^ seed1_ ^ 2333) + 11) % m_;
+        uint32_t h2 = ((k ^ seed2_ ^ 23333) + 3) % m_;
+        uint32_t h3 = ((k ^ seed3_ ^ 233333) + 7) % m_;
         return std::make_tuple(h1, h2, h3);
     }
 
