@@ -10,10 +10,10 @@ jobs:
     - uses: actions/checkout@v1
     - name: install bazel
       run: |
-        apt-get -y install pkg-config zip g++ zlib1g-dev unzip python
+        sudo apt-get -y install pkg-config zip g++ zlib1g-dev unzip python
         wget https://github.com/bazelbuild/bazel/releases/download/0.29.1/bazel-0.29.1-installer-darwin-x86_64.sh
         chmod +x bazel-0.29.1-installer-darwin-x86_64.sh
-        ./bazel-0.29.1-installer-darwin-x86_64.sh
+        sudo ./bazel-0.29.1-installer-darwin-x86_64.sh
     - name: build
       run: bazel build //...
     - name: test
