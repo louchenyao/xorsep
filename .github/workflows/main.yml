@@ -3,7 +3,7 @@ name: CI
 on: [push]
 
 jobs:
-  build:
+  build_test:
     runs-on: ubuntu-latest
     
     steps:
@@ -12,7 +12,11 @@ jobs:
       uses: ngalaiko/bazel-action@0.29.0
       with:
         args: build //...
-  
+    - name: test
+      uses: ngalaiko/bazel-action@0.29.0
+      with:
+        args: test //...
+
   bench:
     runs-on: ubuntu-latest
     
