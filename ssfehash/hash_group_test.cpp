@@ -1,16 +1,22 @@
 #include <gtest/gtest.h>
 
+#include <set>
+
 #include "ssfehash/hash_group.h"
 
 TEST(HashGroup, Basic) {
     // construct key-value pairs
-    std::random_device dev;
-    std::mt19937 rng(dev());
-    std::uniform_int_distribution<std::mt19937::result_type> d(1,100000000);
     std::vector<std::pair<uint64_t, bool>> kvs;
+    std::set<uint64_t> key_set;
     for (int i = 0; i < 256; i++) {
-        uint64_t k = d(rng);
-        bool v = d(rng) % 2;
+        uint64_t k = rand();
+        bool v = rand() % 2;
+        if (key_set.find(k) != key_set.end()) {
+            i--;
+            continue;
+        }
+
+        key_set.insert(k);
         kvs.push_back(std::make_pair(k, v));
     }
 
