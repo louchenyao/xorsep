@@ -25,23 +25,34 @@ def analyze(bins):
     bins_n = len(bins)
     balls_n = sum(bins)
     avg = balls_n / bins_n
-    print("================================")
     print(f"bins: {bins_n}, balls: {balls_n} ({balls_n/8/1024/1024} Mb), avg: {avg}")
+
+    bits_for_indexes = 0
+    bits_for_indexes += 16 * bins_n # bins index
+    bits_for_indexes += 6 * bins_n # bin's hash family
+    print("bits for indexes: %.4f" % (bits_for_indexes/balls_n))
+
     for i in [60, 65, 70, 75, 80, 85, 90, 95, 100]:
         ith_load = nth_percentile(bins, i)
         
         bits = 0
-        bits += 16 * bins_n # bins index
-        bits += 6 * bins_n # bin's hash family
-        bits += i/100 * bins_n * 1.1 * ith_load # bitarrys for bins which have less than ith percentile load
-        bits += (100-i)/100 * bins_n * 1.1 * bins[-1] # bitarrys for remaining bins
+        
+        bits_for_arrays = 0
+        bits_for_arrays += i/100 * bins_n * 1.1 * ith_load # bitarrys for bins which have less than ith percentile load
+        bits_for_arrays += (100-i)/100 * bins_n * 1.1 * bins[-1] # bitarrys for remaining bins
 
-        print(f"{i}th percentile load: {ith_load}, bits: {bits/balls_n}, bits for index and hash family: {24*bins_n/balls_n}")
+        bits = bits_for_indexes + bits_for_arrays
+
+        print(f"%3dth percentile load: {ith_load}, bits: %.4f, bits for arrays: %.4f" % (i, bits/balls_n, bits_for_arrays/balls_n))
 
 if __name__ == "__main__":
     n = 1*10**7
-    epxected_per_group = 300
-    
-    for _ in range(5):
-        bins = simulate(n/epxected_per_group, n)
-        analyze(bins)
+
+    for epxected_per_group in [200, 250, 300, 350, 400]:
+        print("********************************")
+        print(f"* balls = {n}, avg_per_bin = {epxected_per_group}")
+        print("********************************")
+        for i in range(3):
+            print(f"run {i} ...")
+            bins = simulate(n/epxected_per_group, n)
+            analyze(bins)
