@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 
-import numpy as np
 import random
 
 def simulate(bins_n, balls_n):
