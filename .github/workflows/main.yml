@@ -41,7 +41,7 @@ jobs:
     - name: install python libraries
       run: |
         sudo apt-get install python3-pip
-        sudo pip3 isntall matplotlib numpy
+        sudo pip3 install matplotlib numpy
     - name: overhead experiment
       run: python3 scripts/overhead_experiment.py
     - name: collect figures
