@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import matplotlib.pyplot as plt
 import random
 
 def simulate(bins_n, balls_n):
@@ -45,6 +46,20 @@ def analyze(bins):
 
         print(f"%3dth percentile load: {ith_load}, bits: %.4f, bits for arrays: %.4f" % (i, bits/balls_n, bits_for_arrays/balls_n))
 
+def plot_load_distribution(bins):
+    mx = max(bins)
+    balls_n = sum(bins)
+    avg = int(balls_n / len(bins))
+
+    counts = [0]*800
+    for b in bins:
+        counts[b] += 1
+
+    fig, ax = plt.subplots(1, 1)
+    ax.plot(counts)
+    fig.savefig(f"dist_{balls_n}_{avg}.png")
+    
+
 if __name__ == "__main__":
     n = 1*10**7
 
@@ -52,6 +67,8 @@ if __name__ == "__main__":
         print("********************************")
         print(f"* balls = {n}, avg_per_bin = {epxected_per_group}")
         print("********************************")
+        bins = simulate(n/epxected_per_group, n)
+        plot_load_distribution(bins)
         for i in range(3):
             print(f"run {i} ...")
             bins = simulate(n/epxected_per_group, n)

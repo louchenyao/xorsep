@@ -38,5 +38,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: install python libraries
+      run: |
+        sudo apt-get install python3-pip
+        sudo pip3 isntall matplotlib numpy
     - name: overhead experiment
-      run: python3 scripts/overhead_experiment.py 
+      run: python3 scripts/overhead_experiment.py
+    - name: collect figures
+      run: |
+        mkdir figures
+        mv *.png figures
+    - uses: actions/upload-artifact@master
+      with:
+        name: load_distributions
+        path: figures
+      
