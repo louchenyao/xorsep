@@ -12,4 +12,4 @@ def generate(n):
     print(s)
 
 if __name__ == "__main__":
-    generate(100)
+    generate(256)

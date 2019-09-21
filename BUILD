@@ -6,12 +6,18 @@ cc_binary(
         "@benchmark//:benchmark", 
         "@benchmark//:benchmark_main",
         "//:ssfehash",
+        "//:dev_utils",
     ]
 )
 
 cc_library(
     name = "ssfehash",
     hdrs = glob(["ssfehash/*.h"]),
+)
+
+cc_library(
+    name = "dev_utils",
+    hdrs = glob(["dev_utils/*.h"]),
 )
 
 cc_test(
@@ -21,6 +27,7 @@ cc_test(
     copts = ["-std=c++17", "-O2", "-march=native", "-Wall", "-Wextra", "-Werror"],
     deps = [
         "//:ssfehash",
+        "//:dev_utils",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
     ]

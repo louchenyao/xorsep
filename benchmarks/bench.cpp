@@ -7,39 +7,47 @@
 #include <vector>
 
 #include "ssfehash/hash_family.h"
+#include "ssfehash/ssfe.h"
+#include "dev_utils/dev_utils.h"
 
-static void BM_stdmap(benchmark::State& state) {
+static void BM_stdmap_query(benchmark::State& state) {
     // Setup
-    std::vector<uint64_t> keys;
+    auto kvs = construct_keyvalues(state.range(0));
     std::map<uint64_t, bool> m;
-    for (int i = 0; i < state.range(0); i++) {
-        uint64_t k = std::rand();
-        bool v = std::rand() % 2;
-        m[k] = v;
-        keys.push_back(k);
+    for (const auto&kv : kvs) {
+        m[kv.first] = kv.second;
     }
 
-    std::random_device rd;
-    std::mt19937 g(rd());
-    std::shuffle(keys.begin(), keys.end(), g);
-
+    shuffle_vector<std::pair<uint64_t, bool> >(kvs);
+    
     // Benchmark
     int i = 0;
-    int keys_size = keys.size();
     for (auto _ : state) {
-        benchmark::DoNotOptimize(m[i]);
-        i = (i + 1) % keys_size;
+        benchmark::DoNotOptimize(m[kvs[i].first]);
+        i = (i + 1) % kvs.size();
     }
 }
 
-static void BM_hash_family(benchmark::State& state) {
+static void BM_ssfe_query(benchmark::State& state) {
+    auto kvs = construct_keyvalues(state.range(0));
+    SSFE<uint64_t> ssfe(kvs.size());
+    ssfe.build(kvs);
+    shuffle_vector<std::pair<uint64_t, bool> >(kvs);
+    
+    // Benchmark
+    int i = 0;
+    for (auto _ : state) {
+        benchmark::DoNotOptimize(ssfe.query(kvs[i].first));
+        i = (i + 1) % kvs.size();
+    }
+}
+
+static void BM_hash(benchmark::State& state) {
     std::vector<int> families;
     for (int i = 0; i < HASH_FAMILY_NUM; i++) {
         families.push_back(i);
     }
-    std::random_device rd;
-    std::mt19937 g(rd());
-    std::shuffle(families.begin(), families.end(), g);
+    shuffle_vector<int>(families);
 
     if (state.range(0) == 64) {
         auto h = HashFamily<uint64_t>();
@@ -61,8 +69,6 @@ static void BM_hash_family(benchmark::State& state) {
     }
 }
 
-BENCHMARK(BM_hash_family)->Arg(64)->Arg(128);
-BENCHMARK(BM_stdmap)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
-
-// Run the benchmark
-BENCHMARK_MAIN();
+BENCHMARK(BM_hash)->Arg(64)->Arg(128);
+BENCHMARK(BM_ssfe_query)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
+BENCHMARK(BM_stdmap_query)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);

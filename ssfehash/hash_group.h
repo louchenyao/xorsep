@@ -93,13 +93,14 @@ template <typename KEY_TYPE>
 int build(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
                      uint8_t *data, size_t data_size) {
     const int hash_family_index_size = 1;
+    assert(HASH_FAMILY_NUM <= 256);
 
     // ensure the data size is large enough
     assert((data_size - hash_family_index_size) * 8 >= kvs.size());
 
     // try to construct with all hash families, and return the first successed
     // one.
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < HASH_FAMILY_NUM; ++i) {
         if (build_naive_<KEY_TYPE>(kvs, data + hash_family_index_size,
                                   data_size - hash_family_index_size, i)) {
             data[0] = (uint8_t)i;
