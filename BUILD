@@ -10,7 +10,7 @@ cc_binary(
 
 cc_library(
     name = "ssfehash",
-    hdrs = ["ssfehash/hash_group.h"],
+    hdrs = glob(["ssfehash/*.h"]),
 )
 
 cc_test(

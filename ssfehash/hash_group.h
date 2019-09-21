@@ -1,5 +1,9 @@
+#pragma once
+
 #include <random>
 #include <vector>
+
+#include "ssfehash/hash_family.h"
 
 template <typename KEY_TYPE>
 class HashGroup {
@@ -8,8 +12,9 @@ class HashGroup {
               double x_size_factor = 1.1) {
         // try to construct at most 100 times
         for (int i = 0; i < 100; ++i) {
-            if (construct(kvs, x_size_factor)) {
+            if (construct(kvs, x_size_factor, i)) {
                 printf("Constructed %d times to find a proper set of hash functions!\n", i+1);
+                hash_family_ = i;
                 return;
             }
         }
@@ -18,15 +23,7 @@ class HashGroup {
     ~HashGroup() { delete[] x_; }
 
     bool construct(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
-                   double x_size_factor) {
-        std::random_device dev;
-        std::mt19937 rng(dev());
-        std::uniform_int_distribution<std::mt19937::result_type> d(1,
-                                                                   100000000);
-        seed1_ = d(rng);
-        seed2_ = d(rng);
-        seed3_ = d(rng);
-
+                   double x_size_factor, int hash_family) {
         int n = kvs.size();
         int m = n * x_size_factor;
         m_ = m;
@@ -36,8 +33,7 @@ class HashGroup {
         bool a[n][m + 1];
         memset(a, 0, sizeof(a));
         for (int i = 0; i < n; i++) {
-            KEY_TYPE k = kvs[i].first;
-            auto [h1, h2, h3] = hash(k);
+            auto [h1, h2, h3] = h.hash(kvs[i].first, hash_family, m_);
             a[i][h1] ^= true;
             a[i][h2] ^= true;
             a[i][h3] ^= true;
@@ -100,20 +96,14 @@ class HashGroup {
     }
 
     bool query(KEY_TYPE k) {
-        auto [h1, h2, h3] = hash(k);
+        auto [h1, h2, h3] = h.hash(k, hash_family_, m_);
         return x_[h1] ^ x_[h2] ^ x_[h3];
     }
 
-    std::tuple<uint32_t, uint32_t, uint32_t> hash(KEY_TYPE k) {
-        // TODO (Chenyao): Replace them with more decent hash functions
-        uint32_t h1 = ((k ^ seed1_ ^ 2333) + 11) % m_;
-        uint32_t h2 = ((k ^ seed2_ ^ 23333) + 3) % m_;
-        uint32_t h3 = ((k ^ seed3_ ^ 233333) + 7) % m_;
-        return std::make_tuple(h1, h2, h3);
-    }
-
    private:
-    KEY_TYPE seed1_, seed2_, seed3_;
+    int hash_family_;
     bool *x_;
     int m_;  // x_ size
+
+    HashFamily<KEY_TYPE> h;
 };
