@@ -35,5 +35,18 @@ static void BM_ssfe_query(benchmark::State& state) {
     }
 }
 
+static void BM_query_prepare(benchmark::State& state) {
+    auto kvs = construct_keyvalues(state.range(0));
+    shuffle_vector<std::pair<uint64_t, bool> >(kvs);
+    
+    // Benchmark
+    int i = 0;
+    for (auto _ : state) {
+        benchmark::DoNotOptimize(kvs[i].first);
+        i = (i + 1) % kvs.size();
+    }
+}
+
+BENCHMARK(BM_query_prepare)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 BENCHMARK(BM_ssfe_query)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 BENCHMARK(BM_stdmap_query)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
