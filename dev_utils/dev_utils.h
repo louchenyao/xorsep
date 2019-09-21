@@ -1,10 +1,11 @@
 #pragma once
 
 #include <algorithm>
+#include <random>
 #include <set>
 #include <vector>
 
-static std::vector<std::pair<uint64_t, bool>> construct_keyvalues(int n) {
+inline std::vector<std::pair<uint64_t, bool>> construct_keyvalues(int n) {
     // construct key-value pairs
     std::vector<std::pair<uint64_t, bool>> kvs;
     std::set<uint64_t> key_set;
@@ -24,7 +25,7 @@ static std::vector<std::pair<uint64_t, bool>> construct_keyvalues(int n) {
 }
 
 template <typename T>
-static void shuffle_vector(std::vector<T> &v) {
+inline void shuffle_vector(std::vector<T> &v) {
     std::random_device rd;
     std::mt19937 g(rd());
     std::shuffle(v.begin(), v.end(), g);

@@ -1,6 +1,6 @@
 cc_binary(
     name = "bench",
-    srcs = glob(["benchmarks/*.cpp"]),
+    srcs = glob(["ssfehash/*_bench.cpp"]),
     copts = ["-std=c++17", "-O2", "-march=native", "-Wall", "-Wextra", "-Werror"],
     deps = [
         "@benchmark//:benchmark", 
