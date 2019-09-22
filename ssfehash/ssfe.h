@@ -8,7 +8,7 @@ template <typename KEY_TYPE>
 class SSFE {
    public:
     SSFE(int max_capacity) {
-        int avg_load= (256-6) / 1.1 / 1.5; // TODO (Chenyao): Try to optimize these constants.
+        int avg_load= (256-8) / 1.1 / 1.5; // TODO (Chenyao): Try to optimize these constants.
         group_num_ = max_capacity / avg_load + 1;
         data_ = new uint8_t[group_num_ * 256];
     }
