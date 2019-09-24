@@ -15,7 +15,7 @@ template <class HASH_FAMILY>
 void hash_group_test(std::string name, bool verify=true) {
     printf("{");
     int tot_trails = 0;
-    int tot_rounds = 300;
+    int tot_rounds = 2000;
 
     for (int round = 0; round < tot_rounds; round++) {
         // construct key-value pairs
@@ -25,7 +25,14 @@ void hash_group_test(std::string name, bool verify=true) {
         uint8_t *data = new uint8_t[256 / 8];
         int family_index = HashGroup::build<uint64_t, HASH_FAMILY >(kvs, data, 256 / 8);
         assert(family_index >= 0);
-        printf("%d, ", family_index + 1);
+        
+        if (round < 30) {
+            printf("%d, ", family_index + 1);
+        } else if (round == 30) {
+            printf("...");
+        }
+        
+        
         tot_trails += family_index + 1;
 
         // verify
