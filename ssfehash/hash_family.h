@@ -86,9 +86,9 @@ class FakeRandomFamily {
         std::mt19937 gen(rd());
         std::uniform_int_distribution<uint32_t> dist(0, 0xffffffff);
 
-        uint64_t h1 = (uint64_t(dist(gen)) << 32 | (dist(gen) ^ SEEDS[hash_index][0])) % mod;
-        uint64_t h2 = (uint64_t(dist(gen)) << 32 | (dist(gen) ^ SEEDS[hash_index][1])) % mod;
-        uint64_t h3 = (uint64_t(dist(gen)) << 32 | (dist(gen) ^ SEEDS[hash_index][2])) % mod;
+        uint64_t h1 = (uint64_t(dist(gen)) << 32 ^ dist(gen) ^ SEEDS[hash_index][0]) % mod;
+        uint64_t h2 = (uint64_t(dist(gen)) << 32 ^ dist(gen) ^ SEEDS[hash_index][1]) % mod;
+        uint64_t h3 = (uint64_t(dist(gen)) << 32 ^ dist(gen) ^ SEEDS[hash_index][2]) % mod;
         return std::make_tuple<uint32_t, uint32_t, uint32_t>(h1, h2, h3);
     }
 
