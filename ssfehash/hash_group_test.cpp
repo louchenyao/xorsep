@@ -30,5 +30,5 @@ TEST(HashGroup, Basic) {
 
         delete[] data;
     }
-    printf("} trails to find a hash family!\n");
+    printf("} trails to find a hash index!\n");
 }

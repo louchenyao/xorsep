@@ -21,7 +21,8 @@ class HashFamily {
                  h3 = SEEDS[hash_index][2];
         uint64_t *t = (uint64_t *)&key;
         for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
-            h1 = _mm_crc32_u64(h1, t[i]);
+            h1 ^= t[i] ^ i;
+            //h1 = _mm_crc32_u64(h1, t[i]);
             h2 = _mm_crc32_u64(h2, t[i]);
             h3 = _mm_crc32_u64(h3, t[i]);
         }

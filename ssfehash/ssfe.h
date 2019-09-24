@@ -26,6 +26,7 @@ class SSFE {
         for (int i = 0; i < group_num_; i++) {
             int hash_family = HashGroup::build<KEY_TYPE>(groups[i], data_ + i*256, 256 / 8);
             if (hash_family < 0) {
+                printf("i = %d\n", i);
                 printf("group size: %d\n", (int)groups[i].size());
                 assert(false);
             }
