@@ -17,7 +17,7 @@ jobs:
     - name: build
       run: bazel build //...
     - name: test
-      run: bazel test //...
+      run: bazel run //:test
 
   bench:
     runs-on: ubuntu-latest

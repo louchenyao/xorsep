@@ -12,7 +12,7 @@ TEST(HashGroup, BitManipulation) {
 }
 
 template <class HASH_FAMILY>
-void hash_group_test(std::string name) {
+void hash_group_test(std::string name, bool verify=true) {
     printf("{");
     int tot_trails = 0;
     int tot_rounds = 300;
@@ -29,11 +29,12 @@ void hash_group_test(std::string name) {
         tot_trails += family_index + 1;
 
         // verify
-        for (auto &kv : kvs) {
-            bool r = HashGroup::query<uint64_t, HASH_FAMILY >(kv.first, data, 256 / 8);
-            EXPECT_EQ(kv.second, r);
+        if (verify) {
+            for (auto &kv : kvs) {
+                bool r = HashGroup::query<uint64_t, HASH_FAMILY >(kv.first, data, 256 / 8);
+                EXPECT_EQ(kv.second, r);
+            }
         }
-
         delete[] data;
     }
     printf("} (avg: %.3lf) trails to find a hash index in %s!\n", double(tot_trails)/tot_rounds, name.c_str());
@@ -42,4 +43,5 @@ void hash_group_test(std::string name) {
 TEST(HashGroup, Basic) {
     hash_group_test<MixFamily<uint64_t>>("MixFamily");
     hash_group_test<CRC32Family<uint64_t>>("CRC32Family");
+    hash_group_test<FakeRandomFamily<uint64_t>>("FakeRandomFamily", false);
 }

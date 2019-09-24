@@ -1,6 +1,7 @@
 #pragma once
 
 #include <tuple>
+#include <random>
 #include <nmmintrin.h>
 
 const int HASH_FAMILY_NUM = 256;
@@ -71,5 +72,28 @@ class MixFamily {
             h ^= _mm_crc32_u64(h, t[i]);
         }
         return h % mod;
+    }
+};
+
+
+template <typename KEY_TYPE>
+class FakeRandomFamily {
+   public:
+    std::tuple<uint32_t, uint32_t, uint32_t> hash(KEY_TYPE key, int hash_index,
+                                                  int mod) {
+        (void)key;
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<uint32_t> dist(0, 0xffffffff);
+
+        uint64_t h1 = (uint64_t(dist(gen)) << 32 | (dist(gen) ^ SEEDS[hash_index][0])) % mod;
+        uint64_t h2 = (uint64_t(dist(gen)) << 32 | (dist(gen) ^ SEEDS[hash_index][1])) % mod;
+        uint64_t h3 = (uint64_t(dist(gen)) << 32 | (dist(gen) ^ SEEDS[hash_index][2])) % mod;
+        return std::make_tuple<uint32_t, uint32_t, uint32_t>(h1, h2, h3);
+    }
+
+    uint32_t hash_once(KEY_TYPE key, int mod) {
+        (void)key;
+        return (uint64_t(rand()) << 32 | rand()) % mod;
     }
 };
