@@ -11,14 +11,14 @@ static void BM_hash(benchmark::State& state) {
     shuffle_vector<int>(families);
 
     if (state.range(0) == 64) {
-        auto h = HashFamily<uint64_t>();
+        auto h = MixFamily<uint64_t>();
         int i = 0;
         for (auto _ : state) {
             benchmark::DoNotOptimize(h.hash(42414242424u, families[i], 12345));
             i = (i + 1) % HASH_FAMILY_NUM;
         }
     } else if (state.range(0) == 128) {
-        auto h = HashFamily<long double>();
+        auto h = MixFamily<long double>();
         assert(sizeof(long double) == 128/8);
         int i = 0;
         for (auto _ : state) {

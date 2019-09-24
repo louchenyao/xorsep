@@ -2,9 +2,9 @@
 
 #include "ssfehash/hash_family.h"
 
-template <typename KEY_TYPE>
+template <class HASH_FAMILY>
 void test_hash_family() {
-    HashFamily<KEY_TYPE> h;
+    HASH_FAMILY h;
 
     int a = 123;
     uint32_t b = 123;
@@ -18,7 +18,9 @@ void test_hash_family() {
     EXPECT_NE(h.hash(c, 42, mod), h.hash(d, 42, mod));
 }
 
-TEST(HashFamily, Basic) {
-    test_hash_family<long double>();
-    test_hash_family<uint64_t>();
+TEST(CRC32Family, Basic) {
+    test_hash_family<MixFamily<long double> >();
+    test_hash_family<CRC32Family<long double> >();
+    test_hash_family<MixFamily<uint64_t> >();
+    test_hash_family<CRC32Family<uint64_t> >();
 }

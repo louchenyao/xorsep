@@ -24,7 +24,7 @@ class SSFE {
         }
 
         for (int i = 0; i < group_num_; i++) {
-            int hash_family = HashGroup::build<KEY_TYPE>(groups[i], data_ + i*256, 256 / 8);
+            int hash_family = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(groups[i], data_ + i*256, 256 / 8);
             if (hash_family < 0) {
                 printf("i = %d\n", i);
                 printf("group size: %d\n", (int)groups[i].size());
@@ -35,11 +35,11 @@ class SSFE {
 
     bool query(KEY_TYPE key) {
         int g = h_.hash_once(key, group_num_);
-        return HashGroup::query<KEY_TYPE>(key, data_ + g*256, 256 / 8);
+        return HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(key, data_ + g*256, 256 / 8);
     }
 
    private:
-    HashFamily<KEY_TYPE> h_;
+    MixFamily<KEY_TYPE> h_;
     int group_num_;
     uint8_t* data_;
 };

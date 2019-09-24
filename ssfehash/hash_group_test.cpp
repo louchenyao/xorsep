@@ -11,24 +11,35 @@ TEST(HashGroup, BitManipulation) {
     EXPECT_EQ(d, 20);
 }
 
-TEST(HashGroup, Basic) {
+template <class HASH_FAMILY>
+void hash_group_test(std::string name) {
     printf("{");
-    for (int round = 0; round < 300; round++) {
+    int tot_trails = 0;
+    int tot_rounds = 300;
+
+    for (int round = 0; round < tot_rounds; round++) {
         // construct key-value pairs
         std::vector<std::pair<uint64_t, bool>> kvs = construct_keyvalues(220);
 
         // build the hash group
         uint8_t *data = new uint8_t[256 / 8];
-        int hash_family = HashGroup::build<uint64_t>(kvs, data, 256 / 8);
-        assert(hash_family >= 0);
-        printf("%d, ", hash_family + 1);
+        int family_index = HashGroup::build<uint64_t, HASH_FAMILY >(kvs, data, 256 / 8);
+        assert(family_index >= 0);
+        printf("%d, ", family_index + 1);
+        tot_trails += family_index + 1;
 
         // verify
         for (auto &kv : kvs) {
-            EXPECT_EQ(kv.second, HashGroup::query(kv.first, data, 256 / 8));
+            bool r = HashGroup::query<uint64_t, HASH_FAMILY >(kv.first, data, 256 / 8);
+            EXPECT_EQ(kv.second, r);
         }
 
         delete[] data;
     }
-    printf("} trails to find a hash index!\n");
+    printf("} (avg: %.3lf) trails to find a hash index in %s!\n", double(tot_trails)/tot_rounds, name.c_str());
+}
+
+TEST(HashGroup, Basic) {
+    hash_group_test<MixFamily<uint64_t>>("MixFamily");
+    hash_group_test<CRC32Family<uint64_t>>("CRC32Family");
 }

@@ -20,12 +20,12 @@ inline void flip_bit(uint8_t *data, int i, bool cond = true) {
 
 namespace HashGroup {
 
-template <typename KEY_TYPE>
+template <typename KEY_TYPE, class HASH_FAMILY>
 bool build_naive_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
                  uint8_t *data, size_t data_size, int hash_family) {
     int n = kvs.size();
     int m = data_size * 8;
-    HashFamily<KEY_TYPE> h;
+    HASH_FAMILY h;
 
     // build the hash matrix
     bool a[n][m + 1];
@@ -90,7 +90,7 @@ bool build_naive_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
     return true;
 }
 
-template <typename KEY_TYPE>
+template <typename KEY_TYPE, class HASH_FAMILY>
 int build(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
                      uint8_t *data, size_t data_size) {
     const int hash_family_index_size = 1;
@@ -102,7 +102,7 @@ int build(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
     // try to construct with all hash families, and return the first successed
     // one.
     for (int i = 0; i < HASH_FAMILY_NUM; ++i) {
-        if (build_naive_<KEY_TYPE>(kvs, data + hash_family_index_size,
+        if (build_naive_<KEY_TYPE, HASH_FAMILY>(kvs, data + hash_family_index_size,
                                   data_size - hash_family_index_size, i)) {
             data[0] = (uint8_t)i;
             return i;
@@ -112,9 +112,9 @@ int build(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
     return -1;
 }
 
-template <typename KEY_TYPE>
+template <typename KEY_TYPE, class HASH_FAMILY>
 bool query(KEY_TYPE k, uint8_t *data, int data_size) {
-    HashFamily<KEY_TYPE> h;
+    HASH_FAMILY h;
     auto [h1, h2, h3] = h.hash(k, data[0], (data_size - 1) * 8);
     return get_bit(data + 1, h1) ^ get_bit(data + 1, h2) ^
            get_bit(data + 1, h3);
