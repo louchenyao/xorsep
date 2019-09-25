@@ -35,6 +35,7 @@ class SSFE {
 
     bool query(KEY_TYPE key) {
         int g = h_.hash_once(key, group_num_);
+        //__builtin_prefetch(data_+g*256);
         return HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(key, data_ + g*256, 256 / 8);
     }
 
