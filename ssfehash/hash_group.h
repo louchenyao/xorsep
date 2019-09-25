@@ -6,16 +6,22 @@
 
 #include "ssfehash/hash_family.h"
 
-inline bool get_bit(uint8_t *data, int i) {
-    return data[i / 8] & (1 << (i % 8));
+template <typename T>
+inline bool get_bit(T *data, int i) {
+    const int s = sizeof(T) * 8;
+    return data[i / s] & (1 << (i % s));
 }
 
-inline void set_bit(uint8_t *data, int i, bool val = true) {
-    data[i / 8] = (data[i / 8] & ~(1 << (i % 8))) | (uint8_t(val) << (i % 8));
+template <typename T>
+inline void set_bit(T *data, int i, bool val = true) {
+    const int s = sizeof(T) * 8;
+    data[i / s] = (data[i / s] & ~(1 << (i % s))) | (uint8_t(val) << (i % s));
 }
 
-inline void flip_bit(uint8_t *data, int i, bool cond = true) {
-    data[i / 8] ^= (int(cond) << (i % 8));
+template <typename T>
+inline void flip_bit(T *data, int i, bool cond = true) {
+    const int s = sizeof(T) * 8;
+    data[i / s] ^= (int(cond) << (i % s));
 }
 
 namespace HashGroup {
@@ -91,6 +97,82 @@ bool build_naive_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
 }
 
 template <typename KEY_TYPE, class HASH_FAMILY>
+bool build_bitset_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
+                 uint8_t *data, int data_size, int hash_family) {
+    int n = kvs.size();
+    int m = data_size * 8;
+    HASH_FAMILY h;
+
+    // build the hash matrix
+    int bitset_len = (m+31)/32;
+    uint32_t a[n][bitset_len];
+    bool b[n];
+    memset(a, 0, sizeof(a));
+    memset(b, 0, sizeof(b));
+
+    for (int i = 0; i < n; i++) {
+        auto [h1, h2, h3] = h.hash(kvs[i].first, hash_family, m);
+        flip_bit(a[i], h1);
+        flip_bit(a[i], h2);
+        flip_bit(a[i], h3);
+        b[i] = kvs[i].second;
+    }
+
+    // do gauess elimnation
+    int j = 0;                     // the column with first non-zero entry
+    for (int i = 0; i < n; i++) {  // i-th row
+        // find a row s.t. a[row][j] = true, then swap it to i-th row
+        bool found = false;
+        for (; j < m; j++) {
+            for (int row = i; row < n; row++) {
+                if (a[row/32] && get_bit(a[row], j)) {
+                    // swap a[row] and a[i]
+                    for (int k = j/32; k < bitset_len; k++) {
+                        std::swap(a[i][k], a[row][k]);
+                    }
+                    std::swap(b[i], b[row]);
+
+                    found = true;
+                    break;
+                }
+            }
+
+            if (found) {
+                break;
+            }
+        }
+        // printf("i = %d, j = %d\n", i, j);
+        if (!found) return false;
+
+        // elimnate other rows which j-th column elements are true
+        for (int k = i + 1; k < n; k++) {  // elimnate k-th row
+            if (a[k/32] && get_bit(a[k], j)) {
+                // set l < m + 1 to xor the answer
+                for (int l = j/32; l < bitset_len; l++) {
+                    a[k][l] ^= a[i][l];
+                }
+                b[k] ^= b[i];
+            }
+        }
+    }
+
+    // calculate result
+    memset(data, 0, data_size);
+    for (int i = n - 1; i >= 0; i--) {
+        // find the first non-zero column
+        for (j = 0; j < m && get_bit(a[i], j) == false; j++)
+            ;
+        assert(j < m);
+
+        set_bit(data, j, b[i]);
+        for (int k = j + 1; k < m; k++) {
+            flip_bit(data, j, get_bit(a[i], k) & get_bit(data, k));
+        }
+    }
+    return true;
+}
+
+template <typename KEY_TYPE, class HASH_FAMILY>
 int build(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
                      uint8_t *data, size_t data_size) {
     const int hash_family_index_size = 1;
@@ -102,7 +184,7 @@ int build(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
     // try to construct with all hash families, and return the first successed
     // one.
     for (int i = 0; i < HASH_FAMILY_NUM; ++i) {
-        if (build_naive_<KEY_TYPE, HASH_FAMILY>(kvs, data + hash_family_index_size,
+        if (build_bitset_<KEY_TYPE, HASH_FAMILY>(kvs, data + hash_family_index_size,
                                   data_size - hash_family_index_size, i)) {
             data[0] = (uint8_t)i;
             return i;
