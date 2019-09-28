@@ -5,13 +5,24 @@
 
 template<typename SSFE_T>
 void test_ssfe() {
-    std::vector<std::pair<uint64_t, bool>> kvs = construct_keyvalues(100000);
+    std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(100000);
     SSFE_T ssfe(kvs.size());
     ssfe.build(kvs);
 
     // verify
     for (auto &kv : kvs) {
         EXPECT_EQ(kv.second, ssfe.query(kv.first));
+    }
+
+    // test batch query
+    uint64_t keys[16];
+    bool res[16];
+    for (int i = 0; i < 16; ++i) {
+        keys[i] = kvs[i].first;
+    }
+    ssfe.query_batch(keys, res, 16);
+    for (int i = 0; i < 16; ++i) {
+        EXPECT_EQ(kvs[i].second, res[i]);
     }
 }
 

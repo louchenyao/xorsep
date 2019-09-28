@@ -39,6 +39,18 @@ class SSFE {
         return HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(key, data_ + g*256, 256 / 8);
     }
 
+    void query_batch(KEY_TYPE *keys, bool *res, int batch_size) {
+        assert(batch_size <= 16);
+        int g[16];
+        for (int i = 0; i < batch_size; i++) {
+            g[i] = h_.hash_once(keys[i], group_num_);
+            __builtin_prefetch(data_ + g[i]*256);
+        }
+        for (int i = 0; i < batch_size; i++) {
+            res[i] = HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(keys[i], data_ + g[i]*256, 256 / 8);
+        }
+    }
+
    private:
     MixFamily<KEY_TYPE> h_;
     int group_num_;
@@ -80,7 +92,7 @@ class SSFE_DONG {
             groups_[i] = p;
 
             
-            uint16_t len = 3 + groups[i].size() * 1.25;
+            uint16_t len = 3 + groups[i].size() * 1.27;
             assert(p + len <= data_ + data_size_);
             
             // copy len
@@ -105,6 +117,28 @@ class SSFE_DONG {
         uint16_t len = 0;
         memcpy(&len, group, sizeof(uint16_t));
         return HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(key, group + 2, len - 2);
+    }
+
+    void query_batch(KEY_TYPE *keys, bool *res, int batch_size) {
+        assert(batch_size <= 16);
+        int g[16];
+        for (int i = 0; i < batch_size; i++) {
+            g[i] = h_.hash_once(keys[i], group_num_);
+            __builtin_prefetch(groups_ + g[i]);
+        }
+
+        // prefetch data
+        for (int i = 0; i < batch_size; i++) {
+            __builtin_prefetch(groups_[g[i]]);
+        }
+
+        // query
+        for (int i = 0; i < batch_size; i++) {
+            uint8_t *group = groups_[g[i]];
+            uint16_t len = 0;
+            memcpy(&len, group, sizeof(uint16_t));
+            res[i] = HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(keys[i], group + 2, len - 2);
+        }
     }
 
    private:

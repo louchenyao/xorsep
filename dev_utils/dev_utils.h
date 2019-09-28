@@ -5,7 +5,7 @@
 #include <set>
 #include <vector>
 
-inline std::vector<std::pair<uint64_t, bool>> construct_keyvalues(int n) {
+inline std::vector<std::pair<uint64_t, bool>> generate_keyvalues(int n) {
     // construct key-value pairs
     std::vector<std::pair<uint64_t, bool>> kvs;
     std::set<uint64_t> key_set;
@@ -21,6 +21,14 @@ inline std::vector<std::pair<uint64_t, bool>> construct_keyvalues(int n) {
         kvs.push_back(std::make_pair(k, v));
     }
 
+    return kvs;
+}
+
+inline std::vector<std::pair<uint64_t, bool>> generate_continous_keyvalues(int n) {
+    std::vector<std::pair<uint64_t, bool>> kvs;
+    for (int i = 0; i < n; ++i) {
+        kvs.push_back(std::make_pair(uint64_t(i), rand() % 2));
+    }
     return kvs;
 }
 

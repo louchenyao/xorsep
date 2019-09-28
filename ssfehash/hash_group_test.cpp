@@ -19,7 +19,7 @@ void hash_group_test(std::string name, bool verify=true) {
 
     for (int round = 0; round < tot_rounds; round++) {
         // construct key-value pairs
-        std::vector<std::pair<uint64_t, bool>> kvs = construct_keyvalues(220);
+        std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(220);
 
         // build the hash group
         uint8_t *data = new uint8_t[256 / 8];
