@@ -21,9 +21,10 @@ static void BM_stdmap_query(benchmark::State& state) {
     }
 }
 
+template <class SSFE_T>
 static void BM_ssfe_query(benchmark::State& state) {
     auto kvs = construct_keyvalues(state.range(0));
-    SSFE<uint64_t> ssfe(kvs.size());
+    SSFE_T ssfe(kvs.size());
     ssfe.build(kvs);
     shuffle_vector<std::pair<uint64_t, bool> >(kvs);
     
@@ -35,9 +36,10 @@ static void BM_ssfe_query(benchmark::State& state) {
     }
 }
 
+template <class SSFE_T>
 static void BM_ssfe_build(benchmark::State& state) {
     auto kvs = construct_keyvalues(state.range(0));
-    SSFE<uint64_t> ssfe(kvs.size());
+    SSFE_T ssfe(kvs.size());
     shuffle_vector<std::pair<uint64_t, bool> >(kvs);
     
     // Benchmark
@@ -64,7 +66,11 @@ static void BM_query_prepare(benchmark::State& state) {
     }
 }
 
-BENCHMARK(BM_ssfe_build)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
+BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE_DONG<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
+BENCHMARK_TEMPLATE(BM_ssfe_query, SSFE_DONG<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
+
+BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
+BENCHMARK_TEMPLATE(BM_ssfe_query, SSFE<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
+
 BENCHMARK(BM_query_prepare)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
-BENCHMARK(BM_ssfe_query)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 BENCHMARK(BM_stdmap_query)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);

@@ -44,3 +44,75 @@ class SSFE {
     int group_num_;
     uint8_t* data_;
 };
+
+template <typename KEY_TYPE>
+class SSFE_DONG {
+   public:
+    SSFE_DONG(int max_capacity) {
+        int avg_load = 256;
+
+        group_num_ = max_capacity / avg_load;    
+        groups_ = new uint8_t*[group_num_];
+
+        data_size_ = group_num_ * 256 * 1.3;
+        data_ = new uint8_t[data_size_];
+    }
+    ~SSFE_DONG() {
+        delete[] data_;
+        delete[] groups_;
+    }
+
+    void build(const std::vector<std::pair<KEY_TYPE, bool>> &kvs) {
+        std::vector<std::pair<KEY_TYPE, bool>> groups[group_num_];
+        for (const auto &kv : kvs) {
+            int g = h_.hash_once(kv.first, group_num_);
+            groups[g].push_back(kv);
+        }
+
+        // One Group:
+        // -------------------------------------------------------------
+        // | len, 2 bytes | hash_index  1 bytes | data (len - 3) bytes |
+        // -------------------------------------------------------------
+
+        uint8_t *p = data_;
+        for (int i = 0; i < group_num_; i++) {
+            // setup the group start address
+            groups_[i] = p;
+
+            
+            uint16_t len = 3 + groups[i].size() * 1.25;
+            assert(p + len <= data_ + data_size_);
+            
+            // copy len
+            memcpy(p, &len, sizeof(uint16_t));
+
+            // the build function setups the hash_index and data
+            int hash_index = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(groups[i], p + 2, len - 2);
+            if (hash_index < 0) {
+                printf("i = %d\n", i);
+                printf("group size: %d\n", (int)groups[i].size());
+                assert(false);
+            }
+
+            p += len;
+        }
+    }
+
+    bool query(KEY_TYPE key) {
+        int g = h_.hash_once(key, group_num_);
+        uint8_t *group = groups_[g];
+
+        uint16_t len = 0;
+        memcpy(&len, group, sizeof(uint16_t));
+        return HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(key, group + 2, len - 2);
+    }
+
+   private:
+    MixFamily<KEY_TYPE> h_;
+
+    size_t data_size_;
+    uint8_t* data_;
+
+    int group_num_;
+    uint8_t** groups_;
+};
