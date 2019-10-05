@@ -104,8 +104,8 @@ bool build_bitset_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
     HASH_FAMILY h;
 
     // build the hash matrix
-    int bitset_len = (m+31)/32;
-    uint32_t a[n][bitset_len];
+    int bitset_len = (m+63)/64;
+    uint64_t a[n][bitset_len];
     bool b[n];
     memset(a, 0, sizeof(a));
     memset(b, 0, sizeof(b));
@@ -125,7 +125,7 @@ bool build_bitset_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
         bool found = false;
         for (; j < m; j++) {
             for (int row = i; row < n; row++) {
-                if (a[row/32] && get_bit(a[row], j)) {
+                if (get_bit(a[row], j)) {
                     // swap a[row] and a[i]
                     for (int k = j/32; k < bitset_len; k++) {
                         std::swap(a[i][k], a[row][k]);
@@ -146,7 +146,7 @@ bool build_bitset_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
 
         // elimnate other rows which j-th column elements are true
         for (int k = i + 1; k < n; k++) {  // elimnate k-th row
-            if (a[k/32] && get_bit(a[k], j)) {
+            if (get_bit(a[k], j)) {
                 // set l < m + 1 to xor the answer
                 for (int l = j/32; l < bitset_len; l++) {
                     a[k][l] ^= a[i][l];
