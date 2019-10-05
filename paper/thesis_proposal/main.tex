@@ -25,9 +25,19 @@ Therefore, we propose a new space efficient hash table SSFE (Supersuper Fast Has
 
 % basic idea
 
-\section{Related Work}
+SSFE consists of two structures, the \textit{Query Structure} and the \textit{Maintenance Structure}. The query structure has less memory footprint than the maintenance structure, and only serves for the lookup. It does not store any keys of tuples. That is why quering a non-existing key results in a random value. The maintenance structure is used to store all tuples so that it supports update operations. This seprating structures design fully utilize the CPU cache since the query structure stores more information by discarding keys. The system can update the query structure on a dedicated core without sacrificing the lookup performance.
+
+% sections introduction
+
+In section \ref{sec:design} we will disscuss the full design of SSFE, and engineering techniques. We compare SSFE with existing works in section \ref{sec:related_work}.
 
 \section{Design}
+\label{sec:design}
+
+
+\section{Related Work}
+\label{sec:related_work}
+
 
 \section{Conclusion}
 
