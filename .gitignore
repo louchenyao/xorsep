@@ -1,3 +1,4 @@
 .vscode
 bazel-*
 *.png
+.DS_Store
