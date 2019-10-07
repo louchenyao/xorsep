@@ -57,9 +57,16 @@ WLOG, we only consider how to construct the $x$ for one group. Suppose there are
 
 According the definition, we want $Ax = (v_0, v_1, ..., v_{n-1})^T = v$. Therefore, $x = A^{T}v$. Note that all addition operations are $xor$ operations in above steps.
 
+The construction may fail. We do experiments shows that it needs $1.3$ times to find a feasible $A$ if the $A$ is randomly generated, when $m = 1.1n$. Thus, we can choose $h_1, h_2, h_3$ among a hash family. Then, the $A$ can be thought as a pesudo-random matrix. This needs SSFE to store the index of $h_1, h_2, h_3$.
 
-% TODO: engineering considerations: How to store groups. What if $A$ is not full rank.
+\subsection{Group Size}
 
+There are two alternative ways to decide the size of groups:
+
+\begin{itemize}
+    \item Fix the group size by a constant, e.g., 256. This makes the group are aligned to the cache line size. Also, the SSFE can compute the position of a group without readding any memory. A problem is that the associated tuples are not even among groups. The SSFE needs more groups to guarantee the group with most tuples has enough capacity. A workaround is to add a indcator to the group, to show whether it has enough space. If it is not, it follows a pointer to a dedicated memory area to extend the group. The cost per key is $1.3 size(value)$ bits.
+    \item Decide the group size $m = 1.1n$, $n$ is the tuples associated to this group. The program needs a pointer array to index the position of each group, since sizes are varying. However, the group can be more compact, the cost per key is $1.1 size(value)$ bits.
+\end{itemize}
 
 \section{Related Work}
 \label{sec:related_work}
@@ -72,7 +79,7 @@ According the definition, we want $Ax = (v_0, v_1, ..., v_{n-1})^T = v$. Therefo
     Cuckoo        & $1.05 (size(value) + size(key))$ & No            \\ \hline
     SepSet        & $2 + 2 size(value)$              & Yes           \\ \hline
     Othello       & $\le 4 size(value)$              & Yes           \\ \hline
-    \textbf{SSFE} & $1.3 size(value)$                & Yes          
+    \textbf{SSFE} & $1.3 size(value)$  or $1.1 size(value)$ & Yes     
     \\ \hline
     \end{tabular}
     \caption{Comparsion between SSFE and existing hashing algorithms.}
@@ -85,7 +92,16 @@ Table \ref{tab:comparsion} shows the comparsion among exiting hashings. It shows
 
 \textbf{SepSet} SepSet divides tuples into small groups. Each group contains 16 tuples in average. It uses $0.5$ bit per key to divide tuples more evenly. In each group, SepSet brute forcely find a hash function that can map all keys into the correct values. 
 
-\textbf{Othello Hashing} Othello does not partition keys. It uses two array $a$ and $b$. The value of a query is $a[h_1(k_i)] \oplus b[h_2(k_i)]$. Othello abstracts those arrays as a bipartite graph, $(h_1(k_i), h_2(k_i))$ is a edge between two sides. When the bipartite group is acyclic, it can trivally set array values to find a feasible setting. They claim that it the probability of the group is acyclic is larger than $0.5$ when total bits are $4n$, so they only need to try $O(1)$ times to find a possile hash function. 
+\textbf{Othello Hashing} Othello does not partition keys. It uses two array $a$ and $b$. The value of a query is $a[h_1(k_i)] \oplus b[h_2(k_i)]$. Othello abstracts those arrays as a bipartite graph, $(h_1(k_i), h_2(k_i))$ is a edge between two sides. When the bipartite group is acyclic, it can trivally set array values to find a feasible setting. They claim that it the probability of the group is acyclic is larger than $0.5$ when total bits are $4n$, so they only need to try $O(1)$ times to find a possile hash function.
+
+\section{Plans}
+
+\begin{itemize}
+    \item Implement SSFE with two group allocation strategies.
+    \item Compare the performance with different strategies.
+    \item Investigate the fast and pratical way to accelerate the construction phase.
+    \item Compare the performance with existing hashings.
+\end{itemize}
 
 \bibliographystyle{plain}
 \bibliography{references}
