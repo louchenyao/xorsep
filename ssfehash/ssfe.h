@@ -2,15 +2,22 @@
 
 #include <vector>
 
-#include "ssfehash/hash_group.h"
+#include "ssfehash/group.h"
+
+// static void print_space_utilization(const char *algo, int bytes, int max_capacity) {
+//     printf("%s: %.3lf bits/key, capacity: %d\n", algo, bytes*8.0 / max_capacity, max_capacity);
+// }
 
 template <typename KEY_TYPE>
 class SSFE {
    public:
     SSFE(int max_capacity) {
-        int avg_load= (256-8) / 1.1 / 1.5; // TODO (Chenyao): Try to optimize these constants.
-        group_num_ = max_capacity / avg_load + 1;
-        data_ = new uint8_t[group_num_ * 256];
+        int max_load = (256-8) / 1.5; // TODO (Chenyao): Try to optimize these constants.
+        group_num_ = max_capacity / max_load + 1;
+        int data_size = group_num_ * (256/8);
+        data_ = new uint8_t[data_size];
+
+        //print_space_utilization("SSFE", data_size, max_capacity);
     }
     ~SSFE() {
         delete[] data_;
@@ -24,7 +31,7 @@ class SSFE {
         }
 
         for (int i = 0; i < group_num_; i++) {
-            int hash_family = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(groups[i], data_ + i*256, 256 / 8);
+            int hash_family = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(groups[i], data_ + i*(256/8), 256 / 8);
             if (hash_family < 0) {
                 printf("i = %d\n", i);
                 printf("group size: %d\n", (int)groups[i].size());
@@ -35,8 +42,8 @@ class SSFE {
 
     bool query(KEY_TYPE key) {
         int g = h_.hash_once(key, group_num_);
-        //__builtin_prefetch(data_+g*256);
-        return HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(key, data_ + g*256, 256 / 8);
+        //__builtin_prefetch(data_+g*(256/8));
+        return HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(key, data_ + g*(256/8), 256 / 8);
     }
 
     void query_batch(KEY_TYPE *keys, bool *res, int batch_size) {
@@ -44,10 +51,10 @@ class SSFE {
         int g[16];
         for (int i = 0; i < batch_size; i++) {
             g[i] = h_.hash_once(keys[i], group_num_);
-            __builtin_prefetch(data_ + g[i]*256);
+            __builtin_prefetch(data_ + g[i]*(256/8));
         }
         for (int i = 0; i < batch_size; i++) {
-            res[i] = HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(keys[i], data_ + g[i]*256, 256 / 8);
+            res[i] = HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(keys[i], data_ + g[i]*(256/8), 256 / 8);
         }
     }
 
@@ -66,8 +73,10 @@ class SSFE_DONG {
         group_num_ = max_capacity / avg_load;    
         groups_ = new uint8_t*[group_num_];
 
-        data_size_ = group_num_ * 256 * 1.3;
+        data_size_ = group_num_ * (avg_load*1.42/8 + 3);
         data_ = new uint8_t[data_size_];
+
+        // print_space_utilization("SSFE_DONG", group_num_ + data_size_, max_capacity);
     }
     ~SSFE_DONG() {
         delete[] data_;
@@ -91,8 +100,7 @@ class SSFE_DONG {
             // setup the group start address
             groups_[i] = p;
 
-            
-            uint16_t len = 3 + groups[i].size() * 1.27;
+            uint16_t len = 3 + (groups[i].size() * 1.40)/8 + 1; // 2 bytes for len, 1 bytes for hash index, (groups[i].size() * 1.4)/8 + 1 for x values
             assert(p + len <= data_ + data_size_);
             
             // copy len

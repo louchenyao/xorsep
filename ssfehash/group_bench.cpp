@@ -2,7 +2,7 @@
 
 #include <tuple>
 
-#include "ssfehash/hash_group.h"
+#include "ssfehash/group.h"
 #include "dev_utils/dev_utils.h"
 
 

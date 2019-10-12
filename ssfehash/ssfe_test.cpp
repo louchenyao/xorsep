@@ -28,5 +28,8 @@ void test_ssfe() {
 
 TEST(SSFE, Basic) {
     test_ssfe<SSFE<uint64_t>>();
+}
+
+TEST(SSFE_DONG, Basic) {
     test_ssfe<SSFE_DONG<uint64_t>>();
 }

@@ -9,19 +9,19 @@
 template <typename T>
 inline bool get_bit(T *data, int i) {
     const int s = sizeof(T) * 8;
-    return data[i / s] & (1 << (i % s));
+    return data[i / s] & (T(1) << (i % s));
 }
 
 template <typename T>
 inline void set_bit(T *data, int i, bool val = true) {
     const int s = sizeof(T) * 8;
-    data[i / s] = (data[i / s] & ~(1 << (i % s))) | (uint8_t(val) << (i % s));
+    data[i / s] = (data[i / s] & ~(T(1) << (i % s))) | (T(val) << (i % s));
 }
 
 template <typename T>
 inline void flip_bit(T *data, int i, bool cond = true) {
     const int s = sizeof(T) * 8;
-    data[i / s] ^= (int(cond) << (i % s));
+    data[i / s] ^= (T(cond) << (i % s));
 }
 
 namespace HashGroup {
@@ -118,7 +118,7 @@ bool build_bitset_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
         b[i] = kvs[i].second;
     }
 
-    // do gauess elimnation
+    // do gauss elimnation
     int j = 0;                     // the column with first non-zero entry
     for (int i = 0; i < n; i++) {  // i-th row
         // find a row s.t. a[row][j] = true, then swap it to i-th row
@@ -127,7 +127,7 @@ bool build_bitset_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
             for (int row = i; row < n; row++) {
                 if (get_bit(a[row], j)) {
                     // swap a[row] and a[i]
-                    for (int k = j/32; k < bitset_len; k++) {
+                    for (int k = j/64; k < bitset_len; k++) {
                         std::swap(a[i][k], a[row][k]);
                     }
                     std::swap(b[i], b[row]);
@@ -148,7 +148,7 @@ bool build_bitset_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
         for (int k = i + 1; k < n; k++) {  // elimnate k-th row
             if (get_bit(a[k], j)) {
                 // set l < m + 1 to xor the answer
-                for (int l = j/32; l < bitset_len; l++) {
+                for (int l = j/64; l < bitset_len; l++) {
                     a[k][l] ^= a[i][l];
                 }
                 b[k] ^= b[i];

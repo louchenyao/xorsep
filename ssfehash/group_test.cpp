@@ -2,7 +2,7 @@
 
 #include <set>
 
-#include "ssfehash/hash_group.h"
+#include "ssfehash/group.h"
 #include "dev_utils/dev_utils.h"
 
 TEST(HashGroup, BitManipulation) {
@@ -12,7 +12,7 @@ TEST(HashGroup, BitManipulation) {
 }
 
 template <class HASH_FAMILY>
-void hash_group_test(std::string name, bool verify=true) {
+void group_test(std::string name, bool verify=true) {
     printf("{");
     int tot_trails = 0;
     int tot_rounds = 2000;
@@ -48,7 +48,7 @@ void hash_group_test(std::string name, bool verify=true) {
 }
 
 TEST(HashGroup, Basic) {
-    hash_group_test<MixFamily<uint64_t>>("MixFamily");
-    hash_group_test<CRC32Family<uint64_t>>("CRC32Family");
-    hash_group_test<FakeRandomFamily<uint64_t>>("FakeRandomFamily", false);
+    group_test<MixFamily<uint64_t>>("MixFamily");
+    group_test<CRC32Family<uint64_t>>("CRC32Family");
+    group_test<FakeRandomFamily<uint64_t>>("FakeRandomFamily", false);
 }
