@@ -40,8 +40,10 @@ static void BM_hash_once(benchmark::State& state) {
         }
     } else if (state.range(0) == 128) {
         auto h = MixFamily<long double>();
+        int i = 23423431;
         for (auto _ : state) {
-            benchmark::DoNotOptimize(h.hash_once(42414242424u, 12345));
+            i++;
+            benchmark::DoNotOptimize(h.hash_once(i, 12345));
         }
     } else {
         assert(false);
