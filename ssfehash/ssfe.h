@@ -69,8 +69,9 @@ class SSFE {
         }
 
         // rebuild the query structure
-        int hash_family = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(groups_[g], data_ + g*(256/8), 256 / 8);
-        if (hash_family < 0) {
+        int index = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(groups_[g], data_ + g*(256/8), 256 / 8);
+        hash_index_[g] = index;
+        if (index < 0) {
             printf("g = %d\n", g);
             printf("group size: %d\n", (int)groups_[g].size());
             assert(false);
@@ -88,7 +89,7 @@ class SSFE {
         int g = h_.hash_once(key, group_num_);
         int offset = g*(256/8);
         __builtin_prefetch(data_ + offset);
-        auto [h1, h2, h3] = h_.hash(key, hash_index_[g], 255);
+        auto [h1, h2, h3] = h_.hash(key, hash_index_[g], 256 - 8);
         return get_bit(data_ + offset + 1, h1) ^ get_bit(data_ + offset + 1, h2) ^ get_bit(data_ + offset + 1, h3);
     }
 
