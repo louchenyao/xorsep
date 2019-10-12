@@ -7,7 +7,7 @@
 
 
 std::tuple<std::vector<std::pair<uint64_t, bool>>, int> prepare() {
-    std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues((256 - 8) / 1.1 / 1.5);
+    std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues((256 - 8) / 1.5);
     
     uint8_t *data = new uint8_t[256 / 8];
     // find a feasible hash function, use that to benchmark the equations solver
