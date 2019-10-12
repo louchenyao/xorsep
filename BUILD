@@ -1,7 +1,8 @@
 cc_binary(
     name = "bench",
     srcs = glob(["ssfehash/*_bench.cpp"]),
-    copts = ["-std=c++17", "-O2", "-march=native", "-Wall", "-Wextra", "-Werror"],
+    # use -Wno-error=strict-overflow there, because O3 trigers a gcc bug https://stackoverflow.com/questions/12984861/dont-understand-assuming-signed-overflow-warning
+    copts = ["-std=c++17", "-O3", "-march=native", "-Wall", "-Wextra", "-Werror", "-Wno-error=strict-overflow"],
     deps = [
         "@benchmark//:benchmark", 
         "@benchmark//:benchmark_main",
@@ -23,8 +24,7 @@ cc_library(
 cc_test(
     name = "test",
     srcs = glob(["ssfehash/*_test.cpp"]),
-    # use O2 at there, because it will triger a gcc bug, which may caused by optimization: https://stackoverflow.com/questions/12984861/dont-understand-assuming-signed-overflow-warning
-    copts = ["-std=c++17", "-O2", "-march=native", "-Wall", "-Wextra", "-Werror"],
+    copts = ["-std=c++17", "-O3", "-march=native", "-Wall", "-Wextra", "-Werror", "-Wno-error=strict-overflow"],
     deps = [
         "//:ssfehash",
         "//:dev_utils",
