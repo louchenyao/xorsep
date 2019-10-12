@@ -18,7 +18,6 @@ static void BM_stdmap_query(benchmark::State& state) {
     // Benchmark
     int i = 0;
     for (auto _ : state) {
-        // !!! stdmap may take this advantage since the adjacent keys may be stored in the adjacent memory
         benchmark::DoNotOptimize(m[i]);
         i += 1;
         if (i == state.range(0)) {
@@ -70,11 +69,10 @@ static void BM_ssfe_query_batch(benchmark::State& state) {
 template <class SSFE_T>
 static void BM_ssfe_build(benchmark::State& state) {
     auto kvs = generate_continous_keyvalues(state.range(0));
-    SSFE_T ssfe(kvs.size());
-    shuffle_vector<std::pair<uint64_t, bool> >(kvs);
     
     // Benchmark
     for (auto _ : state) {
+        SSFE_T ssfe(kvs.size());
         ssfe.build(kvs);
         // ensure the compiler won't optimize the build function
         benchmark::DoNotOptimize(ssfe.query(kvs[0].first));
@@ -85,17 +83,27 @@ static void BM_ssfe_build(benchmark::State& state) {
                             int64_t(state.range(0)));
 }
 
-static void BM_query_prepare(benchmark::State& state) {
+static void BM_ssfe_update(benchmark::State& state) {
     auto kvs = generate_continous_keyvalues(state.range(0));
-    shuffle_vector<std::pair<uint64_t, bool> >(kvs);
-    
-    // Benchmark
+    SSFE<uint64_t> ssfe(kvs.size());
+    ssfe.build(kvs);
+
     int i = 0;
+
+    // Benchmark
     for (auto _ : state) {
-        benchmark::DoNotOptimize(kvs[i].first);
-        i = (i + 1) % kvs.size();
+        ssfe.update(i, i % 2);
+
+        i = i + 1;
+        if (i == state.range(0)) {
+            i = 0;
+        }
     }
+
+    benchmark::DoNotOptimize(ssfe.query(0));
 }
+
+BENCHMARK(BM_ssfe_update)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 
 BENCHMARK_TEMPLATE(BM_ssfe_query_batch, SSFE_DONG<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 BENCHMARK_TEMPLATE(BM_ssfe_query_batch, SSFE<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
@@ -106,5 +114,4 @@ BENCHMARK_TEMPLATE(BM_ssfe_query, SSFE_DONG<uint64_t>)->Arg(10 * 1000)->Arg(100 
 BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 BENCHMARK_TEMPLATE(BM_ssfe_query, SSFE<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 
-BENCHMARK(BM_query_prepare)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 BENCHMARK(BM_stdmap_query)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);

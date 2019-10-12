@@ -33,3 +33,20 @@ TEST(SSFE, Basic) {
 TEST(SSFE_DONG, Basic) {
     test_ssfe<SSFE_DONG<uint64_t>>();
 }
+
+TEST(SSFE, Update) {
+    std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(100000);
+    SSFE<uint64_t> ssfe(kvs.size());
+    ssfe.build(kvs);
+
+    // update
+    for (auto &kv : kvs) {
+        kv.second = bool(rand() % 2);
+        ssfe.update(kv.first, kv.second);
+    }
+
+    // verify
+    for (auto &kv : kvs) {
+        EXPECT_EQ(kv.second, ssfe.query(kv.first));
+    }
+}
