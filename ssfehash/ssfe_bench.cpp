@@ -78,8 +78,7 @@ static void BM_ssfe_build(benchmark::State& state) {
         benchmark::DoNotOptimize(ssfe.query(kvs[0].first));
     }
 
-    // HACK, it is keys per second
-    state.SetBytesProcessed(int64_t(state.iterations()) *
+    state.SetItemsProcessed(int64_t(state.iterations()) *
                             int64_t(state.range(0)));
 }
 

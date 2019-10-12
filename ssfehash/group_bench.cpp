@@ -24,7 +24,7 @@ static void BM_build_naive_(benchmark::State& state) {
     for (auto _ : state) {
         benchmark::DoNotOptimize(HashGroup::build_naive_<uint64_t, MixFamily<uint64_t>>(kvs, data, 256/8 - 1, hash_index));
     }
-    state.SetBytesProcessed(int64_t(state.iterations()) *
+    state.SetItemsProcessed(int64_t(state.iterations()) *
                             int64_t(kvs.size()));
     delete[] data;
 }
@@ -35,7 +35,7 @@ static void BM_build_bitset_(benchmark::State& state) {
     for (auto _ : state) {
         benchmark::DoNotOptimize(HashGroup::build_bitset_<uint64_t, MixFamily<uint64_t>>(kvs, data, 256/8 - 1, hash_index));
     }
-    state.SetBytesProcessed(int64_t(state.iterations()) *
+    state.SetItemsProcessed(int64_t(state.iterations()) *
                             int64_t(kvs.size()));
     delete[] data;
 }
