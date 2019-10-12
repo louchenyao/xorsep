@@ -30,4 +30,23 @@ static void BM_hash(benchmark::State& state) {
     }
 }
 
+static void BM_hash_once(benchmark::State& state) {
+    if (state.range(0) == 64) {
+        auto h = MixFamily<uint64_t>();
+        int i = 23423431;
+        for (auto _ : state) {
+            i++;
+            benchmark::DoNotOptimize(h.hash_once(i, 12345));
+        }
+    } else if (state.range(0) == 128) {
+        auto h = MixFamily<long double>();
+        for (auto _ : state) {
+            benchmark::DoNotOptimize(h.hash_once(42414242424u, 12345));
+        }
+    } else {
+        assert(false);
+    }
+}
+
 BENCHMARK(BM_hash)->Arg(64)->Arg(128);
+BENCHMARK(BM_hash_once)->Arg(64)->Arg(128);
