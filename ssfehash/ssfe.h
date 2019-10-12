@@ -16,6 +16,7 @@ class SSFE {
         group_num_ = max_capacity / max_load + 1;
 
         groups_.resize(group_num_);
+        hash_index_ = new uint8_t[group_num_];
 
         int data_size = group_num_ * (256/8);
         data_ = new uint8_t[data_size];
@@ -24,6 +25,7 @@ class SSFE {
     }
     ~SSFE() {
         delete[] data_;
+        delete[] hash_index_;
     }
 
     void build(const std::vector<std::pair<KEY_TYPE, bool>> &kvs) {
@@ -35,8 +37,9 @@ class SSFE {
         }
 
         for (int i = 0; i < group_num_; i++) {
-            int hash_family = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(groups_[i], data_ + i*(256/8), 256 / 8);
-            if (hash_family < 0) {
+            int index = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(groups_[i], data_ + i*(256/8), 256 / 8);
+            hash_index_[i] = index;
+            if (index < 0) {
                 printf("i = %d\n", i);
                 printf("group size: %d\n", (int)groups_[i].size());
                 assert(false);
@@ -74,10 +77,19 @@ class SSFE {
         }
     }
 
+    bool query_v0(KEY_TYPE key) {
+        int g = h_.hash_once(key, group_num_);
+        return HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(key, data_ + g*(256/8), 256 / 8);
+    }
+
+    // In contrast to query_v0, this function fetch hash index from hash_index_, not from data_.
+    // Thus, it can prefetch data_ when computing hash.
     bool query(KEY_TYPE key) {
         int g = h_.hash_once(key, group_num_);
-        //__builtin_prefetch(data_+g*(256/8));
-        return HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(key, data_ + g*(256/8), 256 / 8);
+        int offset = g*(256/8);
+        __builtin_prefetch(data_ + offset);
+        auto [h1, h2, h3] = h_.hash(key, hash_index_[g], 255);
+        return get_bit(data_ + offset + 1, h1) ^ get_bit(data_ + offset + 1, h2) ^ get_bit(data_ + offset + 1, h3);
     }
 
     void query_batch(KEY_TYPE *keys, bool *res, int batch_size) {
@@ -99,6 +111,7 @@ class SSFE {
     int max_capacity_;
     std::vector<std::vector<std::pair<KEY_TYPE, bool>>> groups_;
     uint8_t* data_;
+    uint8_t* hash_index_;
 };
 
 template <typename KEY_TYPE>
