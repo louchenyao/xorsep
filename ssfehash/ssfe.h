@@ -98,7 +98,7 @@ class SSFE {
     bool query(KEY_TYPE key) {
         int g = h_.hash_once(key) & group_num_bitmask_;
         int offset = g*(SSFE_GROUP_BITS/8);
-        //__builtin_prefetch(data_ + offset);
+        __builtin_prefetch(data_ + offset);
         return HashGroup::query_group_size_256<KEY_TYPE, MixFamily<KEY_TYPE> >(key, data_ +offset, hash_index_[g]);
     }
 
