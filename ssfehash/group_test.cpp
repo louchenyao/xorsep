@@ -11,6 +11,40 @@ TEST(HashGroup, BitManipulation) {
     EXPECT_EQ(d, 20);
 }
 
+
+TEST(HashGroup, WithoutStoringHashIndexInData) {
+    printf("{");
+    int tot_trails = 0;
+    int tot_rounds = 2000;
+
+    for (int round = 0; round < tot_rounds; round++) {
+        // construct key-value pairs
+        std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(220);
+
+        // build the hash group
+        uint8_t *data = new uint8_t[256 / 8];
+        int hash_index = HashGroup::build<uint64_t, MixFamily<uint64_t>>(kvs, data, 256 / 8, false);
+        assert(hash_index >= 0);
+        
+        if (round < 30) {
+            printf("%d, ", hash_index + 1);
+        } else if (round == 30) {
+            printf("...");
+        }
+        
+        
+        tot_trails += hash_index + 1;
+
+        // verify
+        for (auto &kv : kvs) {
+            bool r = HashGroup::query_group_size_256<uint64_t, MixFamily<uint64_t>>(kv.first, data, hash_index);
+            EXPECT_EQ(kv.second, r);
+        }
+        delete[] data;
+    }
+    printf("} (avg: %.3lf) trails to find a hash index in MixFamily(WithoutStroingIndex)!\n", double(tot_trails)/tot_rounds);
+}
+
 template <class HASH_FAMILY>
 void group_test(std::string name, bool verify=true) {
     printf("{");

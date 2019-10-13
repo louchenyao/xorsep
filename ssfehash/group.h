@@ -173,10 +173,13 @@ bool build_bitset_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
 }
 
 template <typename KEY_TYPE, class HASH_FAMILY>
-int build(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
-                     uint8_t *data, size_t data_size) {
-    const int hash_family_index_size = 1;
+int build(const std::vector<std::pair<KEY_TYPE, bool> > &kvs, uint8_t *data,
+          size_t data_size, bool store_index_to_data = true) {
+    int hash_family_index_size = 1;
     assert(HASH_FAMILY_NUM <= 256);
+    if (!store_index_to_data) {
+        hash_family_index_size = 0;
+    }
 
     // ensure the data size is large enough
     assert((data_size - hash_family_index_size) * 8 >= kvs.size());
@@ -184,9 +187,13 @@ int build(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
     // try to construct with all hash families, and return the first successed
     // one.
     for (int i = 0; i < HASH_FAMILY_NUM; ++i) {
-        if (build_bitset_<KEY_TYPE, HASH_FAMILY>(kvs, data + hash_family_index_size,
-                                  data_size - hash_family_index_size, i)) {
-            data[0] = (uint8_t)i;
+        if (build_bitset_<KEY_TYPE, HASH_FAMILY>(
+                kvs, data + hash_family_index_size,
+                data_size - hash_family_index_size, i)) {
+            
+            if (store_index_to_data) {
+                data[0] = (uint8_t)i;
+            }
             return i;
         }
     }
@@ -202,4 +209,12 @@ bool query(KEY_TYPE k, uint8_t *data, int data_size) {
            get_bit(data + 1, h3);
 }
 
+template <typename KEY_TYPE, class HASH_FAMILY>
+bool query_group_size_256(KEY_TYPE k, uint8_t *data, int hash_index) {
+    HASH_FAMILY h;
+    auto [h1, h2, h3] = h.hash(k, hash_index);
+    return get_bit(data, h1 & 255) ^ get_bit(data, h2 & 255) ^
+           get_bit(data, h3 & 255);
 }
+
+}  // namespace HashGroup

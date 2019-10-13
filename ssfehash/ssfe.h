@@ -14,8 +14,16 @@ template <typename KEY_TYPE>
 class SSFE {
    public:
     SSFE(int max_capacity): max_capacity_(max_capacity) {
-        int max_load = (SSFE_GROUP_BITS-8) / 1.5; // TODO (Chenyao): Try to optimize these constants.
+        int max_load = SSFE_GROUP_BITS / 1.5; // TODO (Chenyao): Try to optimize these constants.
         group_num_ = max_capacity / max_load + 1;
+
+        for (int i = 1; ; i *= 2) {
+            if (i >= group_num_) {
+                group_num_ = i;
+                break;
+            }
+        }
+        group_num_bitmask_ = group_num_ - 1;
 
         groups_.resize(group_num_);
         hash_index_ = new uint8_t[group_num_];
@@ -34,12 +42,12 @@ class SSFE {
         size_ = kvs.size();
 
         for (const auto &kv : kvs) {
-            int g = h_.hash_once(kv.first, group_num_);
+            int g = h_.hash_once(kv.first) & group_num_bitmask_;
             groups_[g].push_back(kv);
         }
 
         for (int i = 0; i < group_num_; i++) {
-            int index = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(groups_[i], data_ + i*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS / 8);
+            int index = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(groups_[i], data_ + i*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS / 8, false);
             hash_index_[i] = index;
             if (index < 0) {
                 printf("i = %d\n", i);
@@ -51,7 +59,7 @@ class SSFE {
 
     // update is not thread-safe
     void update(KEY_TYPE key, bool value) {
-        int g = h_.hash_once(key, group_num_);
+        int g = h_.hash_once(key) & group_num_bitmask_;
 
         // update value in the vector
         bool found = false;
@@ -71,7 +79,7 @@ class SSFE {
         }
 
         // rebuild the query structure
-        int index = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(groups_[g], data_ + g*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS/8);
+        int index = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(groups_[g], data_ + g*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS/8, false);
         hash_index_[g] = index;
         if (index < 0) {
             printf("g = %d\n", g);
@@ -80,36 +88,36 @@ class SSFE {
         }
     }
 
-    bool query_v0(KEY_TYPE key) {
-        int g = h_.hash_once(key, group_num_);
-        return HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(key, data_ + g*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS/8);
-    }
+    // bool query_v0(KEY_TYPE key) {
+    //     int g = h_.hash_once(key, group_num_);
+    //     return HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(key, data_ + g*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS/8);
+    // }
 
     // In contrast to query_v0, this function fetch hash index from hash_index_, not from data_.
     // Thus, it can prefetch data_ when computing hash.
     bool query(KEY_TYPE key) {
-        int g = h_.hash_once(key, group_num_);
+        int g = h_.hash_once(key) & group_num_bitmask_;
         int offset = g*(SSFE_GROUP_BITS/8);
-        __builtin_prefetch(data_ + offset);
-        auto [h1, h2, h3] = h_.hash(key, hash_index_[g], SSFE_GROUP_BITS-8);
-        return get_bit(data_ + offset + 1, h1) ^ get_bit(data_ + offset + 1, h2) ^ get_bit(data_ + offset + 1, h3);
+        //__builtin_prefetch(data_ + offset);
+        return HashGroup::query_group_size_256<KEY_TYPE, MixFamily<KEY_TYPE> >(key, data_ +offset, hash_index_[g]);
     }
 
     void query_batch(KEY_TYPE *keys, bool *res, int batch_size) {
         assert(batch_size <= 16);
         int g[16];
         for (int i = 0; i < batch_size; i++) {
-            g[i] = h_.hash_once(keys[i], group_num_);
+            g[i] = h_.hash_once(keys[i]) & group_num_bitmask_;
             __builtin_prefetch(data_ + g[i]*(SSFE_GROUP_BITS/8));
         }
         for (int i = 0; i < batch_size; i++) {
-            res[i] = HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(keys[i], data_ + g[i]*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS/8);
+            res[i] = HashGroup::query_group_size_256<KEY_TYPE, MixFamily<KEY_TYPE> >(keys[i], data_ + g[i]*(SSFE_GROUP_BITS/8), hash_index_[g[i]]);
         }
     }
 
    private:
     MixFamily<KEY_TYPE> h_;
     int group_num_;
+    int group_num_bitmask_;
     int size_;
     int max_capacity_;
     std::vector<std::vector<std::pair<KEY_TYPE, bool>>> groups_;
