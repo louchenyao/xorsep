@@ -14,7 +14,19 @@ template <typename KEY_TYPE>
 class SSFE {
     typedef MixFamily<KEY_TYPE> HASH;
    public:
-    SSFE(int max_capacity): max_capacity_(max_capacity) {
+    SSFE() = default;
+    SSFE(int max_capacity) {
+        init(max_capacity);
+    }
+    ~SSFE() {
+        delete[] data_;
+        delete[] hash_index_;
+    }
+
+    void init(int max_capacity) {
+        assert(data_ == nullptr);
+
+        max_capacity_ = max_capacity;
         int max_load = SSFE_GROUP_BITS / 1.5; // TODO (Chenyao): Try to optimize these constants.
         group_num_ = max_capacity / max_load + 1;
 
@@ -36,9 +48,19 @@ class SSFE {
 
         //print_space_utilization("SSFE", data_size, max_capacity);
     }
-    ~SSFE() {
-        delete[] data_;
-        delete[] hash_index_;
+
+    void clear() {
+        if (data_ != nullptr) {
+            size_ = 0;
+            max_capacity_ = 0;
+            group_num_ = 0;
+            group_num_bitmask_ = 0;
+            groups_.resize(0);
+            delete[] data_;
+            delete[] hash_index_;
+            data_ = nullptr;
+            hash_index_ = nullptr;
+        }
     }
 
     void build(const std::vector<std::pair<KEY_TYPE, bool>> &kvs) {
@@ -124,14 +146,26 @@ class SSFE {
     int size_;
     int max_capacity_;
     std::vector<std::vector<std::pair<KEY_TYPE, bool>>> groups_;
-    uint8_t* data_;
-    uint8_t* hash_index_;
+    uint8_t* data_ = nullptr;
+    uint8_t* hash_index_ = nullptr;
 };
 
 template <typename KEY_TYPE>
 class SSFE_DONG {
    public:
+    SSFE_DONG() = default;
     SSFE_DONG(int max_capacity) {
+        init(max_capacity);
+    }
+    ~SSFE_DONG() {
+        if (data_ != nullptr) {
+            delete[] data_;
+            delete[] groups_;
+        }
+    }
+
+    void init(int max_capacity) {
+        assert(data_ == nullptr);
         int avg_load = 256;
 
         group_num_ = max_capacity / avg_load;    
@@ -142,9 +176,16 @@ class SSFE_DONG {
 
         // print_space_utilization("SSFE_DONG", group_num_ + data_size_, max_capacity);
     }
-    ~SSFE_DONG() {
-        delete[] data_;
-        delete[] groups_;
+
+    void clear() {
+        if (data_ != nullptr) {
+            data_size_ = 0;
+            group_num_ = 0;
+            delete[] data_;
+            delete[] groups_;
+            data_ = nullptr;
+            groups_ = nullptr;
+        }
     }
 
     void build(const std::vector<std::pair<KEY_TYPE, bool>> &kvs) {
@@ -217,8 +258,8 @@ class SSFE_DONG {
     MixFamily<KEY_TYPE> h_;
 
     size_t data_size_;
-    uint8_t* data_;
+    uint8_t* data_ = nullptr;
 
     int group_num_;
-    uint8_t** groups_;
+    uint8_t** groups_ = nullptr;
 };
