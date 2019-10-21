@@ -53,7 +53,7 @@ public:
         pe.inherit_stat = 0;
         pe.exclude_kernel = false;
         pe.exclude_hv = false;
-        pe.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING;
+        //pe.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING;
 
         // open
         fd = syscall(__NR_perf_event_open, &pe, 0, -1, -1, 0);
