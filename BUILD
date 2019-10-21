@@ -6,6 +6,7 @@ cc_binary(
     deps = [
         "@benchmark//:benchmark", 
         "@benchmark//:benchmark_main",
+        "@perfevent//:all",
         "//:ssfehash",
         "//:dev_utils",
     ]

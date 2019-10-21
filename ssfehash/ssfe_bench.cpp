@@ -3,6 +3,8 @@
 #include "ssfehash/ssfe.h"
 #include "dev_utils/dev_utils.h"
 
+#include "PerfEvent.hpp"
+
 // BM_stdmap_query benchmarks the time of acquiring the equery key.
 // The result shows it consumes about 8 ns. I guess the overhead is from the extream long vector.
 // Thus, we set keys to [0, n), then use the conuter as the key for each iteration.
@@ -35,6 +37,23 @@ static void BM_ssfe_query(benchmark::State& state) {
     // Benchmark
     int i = 0;
     for (auto _ : state) {
+        benchmark::DoNotOptimize(ssfe.query(i));
+        i = i + 1;
+        if (i == state.range(0)) {
+            i = 0;
+        }
+    }
+
+    BenchmarkParameters params;
+    
+    params.setParam("name","SSFE_QUERY");
+    params.setParam("keys", state.range(0));
+    int n = 50 * 1000 * 1000;
+    
+    // start to run perf_event
+    PerfEventBlock e(n, params, true);
+    i = 0;
+    for (int cnt = 0; cnt < n; cnt++) {
         benchmark::DoNotOptimize(ssfe.query(i));
         i = i + 1;
         if (i == state.range(0)) {
@@ -102,16 +121,16 @@ static void BM_ssfe_update(benchmark::State& state) {
     benchmark::DoNotOptimize(ssfe.query(0));
 }
 
+// SSFE benchmarks
 BENCHMARK_TEMPLATE(BM_ssfe_query, SSFE<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
+BENCHMARK_TEMPLATE(BM_ssfe_query_batch, SSFE<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
-
 BENCHMARK(BM_ssfe_update)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 
+// SSFE_DONG benchmarks
 BENCHMARK_TEMPLATE(BM_ssfe_query_batch, SSFE_DONG<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
-BENCHMARK_TEMPLATE(BM_ssfe_query_batch, SSFE<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
-
 BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE_DONG<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 BENCHMARK_TEMPLATE(BM_ssfe_query, SSFE_DONG<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 
-
+// stdmap benchmarks
 BENCHMARK(BM_stdmap_query)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
