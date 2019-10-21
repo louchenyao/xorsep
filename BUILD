@@ -15,6 +15,9 @@ cc_binary(
 cc_library(
     name = "ssfehash",
     hdrs = glob(["ssfehash/*.h"]),
+    deps = [
+        "@smhasher//:murmurhash3",
+    ]
 )
 
 cc_library(

@@ -23,3 +23,17 @@ cc_library(
     visibility = ["//visibility:public"],
 )""",
 )
+
+new_git_repository(
+    name = "smhasher",
+    remote = "https://github.com/aappleby/smhasher.git",
+    commit = "61a0530f28277f2e850bfc39600ce61d02b518de",
+    build_file_content = """
+cc_library(
+    name = "murmurhash3",
+    hdrs = ["src/MurmurHash3.h"],
+    srcs = ["src/MurmurHash3.cpp"],
+    strip_include_prefix = "src",
+    visibility = ["//visibility:public"],
+)""",
+)
