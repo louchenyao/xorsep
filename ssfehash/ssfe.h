@@ -12,6 +12,7 @@ const int SSFE_GROUP_BITS = 256;
 
 template <typename KEY_TYPE>
 class SSFE {
+    typedef MixFamily<KEY_TYPE> HASH;
    public:
     SSFE(int max_capacity): max_capacity_(max_capacity) {
         int max_load = SSFE_GROUP_BITS / 1.5; // TODO (Chenyao): Try to optimize these constants.
@@ -27,9 +28,11 @@ class SSFE {
 
         groups_.resize(group_num_);
         hash_index_ = new uint8_t[group_num_];
+        assert(hash_index_ != nullptr);
 
         int data_size = group_num_ * (SSFE_GROUP_BITS/8);
         data_ = new uint8_t[data_size];
+        assert(data_ != nullptr);
 
         //print_space_utilization("SSFE", data_size, max_capacity);
     }
@@ -47,7 +50,7 @@ class SSFE {
         }
 
         for (int i = 0; i < group_num_; i++) {
-            int index = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(groups_[i], data_ + i*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS / 8, false);
+            int index = HashGroup::build<KEY_TYPE, HASH>(groups_[i], data_ + i*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS / 8, false);
             hash_index_[i] = index;
             if (index < 0) {
                 printf("i = %d\n", i);
@@ -79,7 +82,7 @@ class SSFE {
         }
 
         // rebuild the query structure
-        int index = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(groups_[g], data_ + g*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS/8, false);
+        int index = HashGroup::build<KEY_TYPE, HASH>(groups_[g], data_ + g*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS/8, false);
         hash_index_[g] = index;
         if (index < 0) {
             printf("g = %d\n", g);
@@ -99,7 +102,7 @@ class SSFE {
         int g = h_.hash_once(key) & group_num_bitmask_;
         int offset = g*(SSFE_GROUP_BITS/8);
         __builtin_prefetch(data_ + offset);
-        return HashGroup::query_group_size_256<KEY_TYPE, MixFamily<KEY_TYPE> >(key, data_ +offset, hash_index_[g]);
+        return HashGroup::query_group_size_256<KEY_TYPE, HASH>(key, data_ +offset, hash_index_[g]);
     }
 
     void query_batch(KEY_TYPE *keys, bool *res, int batch_size) {
@@ -110,12 +113,12 @@ class SSFE {
             __builtin_prefetch(data_ + g[i]*(SSFE_GROUP_BITS/8));
         }
         for (int i = 0; i < batch_size; i++) {
-            res[i] = HashGroup::query_group_size_256<KEY_TYPE, MixFamily<KEY_TYPE> >(keys[i], data_ + g[i]*(SSFE_GROUP_BITS/8), hash_index_[g[i]]);
+            res[i] = HashGroup::query_group_size_256<KEY_TYPE, HASH>(keys[i], data_ + g[i]*(SSFE_GROUP_BITS/8), hash_index_[g[i]]);
         }
     }
 
    private:
-    MixFamily<KEY_TYPE> h_;
+    HASH h_;
     int group_num_;
     int group_num_bitmask_;
     int size_;

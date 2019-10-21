@@ -44,22 +44,28 @@ static void BM_ssfe_query(benchmark::State& state) {
         }
     }
 
-    BenchmarkParameters params;
-    
-    params.setParam("name","SSFE_QUERY");
-    params.setParam("keys", state.range(0));
-    int n = 50 * 1000 * 1000;
-    
     // start to run perf_event
-    PerfEventBlock e(n, params, true);
+    PerfEvent e;
+    int normalizedConstant = state.iterations();
+    e.startCounters();
     i = 0;
-    for (int cnt = 0; cnt < n; cnt++) {
+    for (int cnt = 0; cnt < normalizedConstant; cnt++) {
         benchmark::DoNotOptimize(ssfe.query(i));
         i = i + 1;
         if (i == state.range(0)) {
             i = 0;
         }
     }
+    e.stopCounters();
+    state.counters["cycles"] = e.getCounter("cycles") / normalizedConstant;
+    state.counters["instructions"] = e.getCounter("instructions") / normalizedConstant;
+    state.counters["L1-misses"] = e.getCounter("L1-misses") / normalizedConstant;
+    state.counters["LLC-misses"] = e.getCounter("LLC-misses") / normalizedConstant;
+    state.counters["branch-misses"] = e.getCounter("branch-misses") / normalizedConstant;
+    state.counters["task-clock"] = e.getCounter("task-clock") / normalizedConstant;
+    state.counters["IPC"] = state.counters["instructions"] / state.counters["cycles"];
+    state.counters["CPUs"] = state.counters["task-clock"] / (e.getDuration()*1e9);
+    state.counters["GHz"] = state.counters["cycles"] / state.counters["task-clock"];
 }
 
 template <class SSFE_T>
