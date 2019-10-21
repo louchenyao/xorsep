@@ -23,6 +23,10 @@ cc_library(
 cc_library(
     name = "dev_utils",
     hdrs = glob(["dev_utils/*.h"]),
+    deps = [
+        "@benchmark//:benchmark",
+        "@perfevent//:all",
+    ]
 )
 
 cc_test(

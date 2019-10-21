@@ -2,6 +2,7 @@
 
 #include "ssfehash/ssfe.h"
 #include "dev_utils/dev_utils.h"
+#include "dev_utils/perf_event_helper.h" 
 
 #include "PerfEvent.hpp"
 
@@ -46,36 +47,16 @@ template <typename SSFE_T>
 void benchmark_query(SSFE_T &ssfe, benchmark::State& state) {
     // Benchmark
     int i = 0;
-    for (auto _ : state) {
-        benchmark::DoNotOptimize(ssfe.query(i));
-        i = i + 1;
-        if (i == state.range(0)) {
-            i = 0;
+    {
+        PerfEventBenchamrkWrapper e(state);
+        for (auto _ : state) {
+            benchmark::DoNotOptimize(ssfe.query(i));
+            i = i + 1;
+            if (i == state.range(0)) {
+                i = 0;
+            }
         }
     }
-
-    // start to run perf_event
-    PerfEvent e;
-    int normalizedConstant = state.iterations();
-    e.startCounters();
-    i = 0;
-    for (int cnt = 0; cnt < normalizedConstant; cnt++) {
-        benchmark::DoNotOptimize(ssfe.query(i));
-        i = i + 1;
-        if (i == state.range(0)) {
-            i = 0;
-        }
-    }
-    e.stopCounters();
-    state.counters["cycles"] = e.getCounter("cycles") / normalizedConstant;
-    state.counters["instructions"] = e.getCounter("instructions") / normalizedConstant;
-    state.counters["L1-misses"] = e.getCounter("L1-misses") / normalizedConstant;
-    state.counters["LLC-misses"] = e.getCounter("LLC-misses") / normalizedConstant;
-    state.counters["branch-misses"] = e.getCounter("branch-misses") / normalizedConstant;
-    state.counters["task-clock"] = e.getCounter("task-clock") / normalizedConstant;
-    state.counters["IPC"] = e.getCounter("instructions") / e.getCounter("cycles");
-    state.counters["CPUs"] = e.getCounter("task-clock") / (e.getDuration()*1e9);
-    state.counters["GHz"] = e.getCounter("cycles") / e.getCounter("task-clock");
 }
 
 template <class SSFE_T>
