@@ -63,9 +63,9 @@ static void BM_ssfe_query(benchmark::State& state) {
     state.counters["LLC-misses"] = e.getCounter("LLC-misses") / normalizedConstant;
     state.counters["branch-misses"] = e.getCounter("branch-misses") / normalizedConstant;
     state.counters["task-clock"] = e.getCounter("task-clock") / normalizedConstant;
-    state.counters["IPC"] = state.counters["instructions"] / state.counters["cycles"];
-    state.counters["CPUs"] = state.counters["task-clock"] / (e.getDuration()*1e9);
-    state.counters["GHz"] = state.counters["cycles"] / state.counters["task-clock"];
+    state.counters["IPC"] = e.getCounter("instructions") / e.getCounter("cycles");
+    state.counters["CPUs"] = e.getCounter("task-clock") / (e.getDuration()*1e9);
+    state.counters["GHz"] = e.getCounter("cycles") / e.getCounter("task-clock");
 }
 
 template <class SSFE_T>
