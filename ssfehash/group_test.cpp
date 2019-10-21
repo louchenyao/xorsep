@@ -82,6 +82,7 @@ void group_test(std::string name, bool verify=true) {
 }
 
 TEST(HashGroup, Basic) {
+    group_test<Murmur3Family<uint64_t>>("Murmur3Family");
     group_test<MixFamily<uint64_t>>("MixFamily");
     group_test<CRC32Family<uint64_t>>("CRC32Family");
     group_test<FakeRandomFamily<uint64_t>>("FakeRandomFamily", false);

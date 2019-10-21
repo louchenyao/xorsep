@@ -6,6 +6,7 @@ cc_binary(
     deps = [
         "@benchmark//:benchmark", 
         "@benchmark//:benchmark_main",
+        "@perfevent//:all",
         "//:ssfehash",
         "//:dev_utils",
     ]
@@ -14,11 +15,18 @@ cc_binary(
 cc_library(
     name = "ssfehash",
     hdrs = glob(["ssfehash/*.h"]),
+    deps = [
+        "@smhasher//:murmurhash3",
+    ]
 )
 
 cc_library(
     name = "dev_utils",
     hdrs = glob(["dev_utils/*.h"]),
+    deps = [
+        "@benchmark//:benchmark",
+        "@perfevent//:all",
+    ]
 )
 
 cc_test(

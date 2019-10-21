@@ -19,6 +19,7 @@ void test_hash_family() {
 }
 
 TEST(CRC32Family, Basic) {
+    test_hash_family<Murmur3Family<uint64_t> >();
     test_hash_family<MixFamily<long double> >();
     test_hash_family<CRC32Family<long double> >();
     test_hash_family<MixFamily<uint64_t> >();
