@@ -8,7 +8,7 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
-    - run: git submodule init
+    - run: git submodule update --init
     - name: build dpdk
       run: ./build_dpdk.sh
       working-directory: dpdk
@@ -28,7 +28,7 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
-    - run: git submodule init
+    - run: git submodule update --init
     - name: build dpdk
       run: ./build_dpdk.sh
       working-directory: dpdk
