@@ -1,0 +1,6 @@
+[submodule "dpdk"]
+	path = dpdk
+	url = https://github.com/louchenyao/dpdk.git
+[submodule "othello"]
+	path = othello
+	url = https://github.com/louchenyao/Othello.git
