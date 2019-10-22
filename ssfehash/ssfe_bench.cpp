@@ -1,6 +1,7 @@
 #include <benchmark/benchmark.h>
 
 #include "ssfehash/ssfe.h"
+#include "sepset.h"
 #include "dev_utils/dev_utils.h"
 #include "dev_utils/perf_event_helper.h" 
 
@@ -63,7 +64,7 @@ template <class SSFE_T>
 void benchmark_query_batch(SSFE_T &ssfe, benchmark::State& state) {
     // Benchmark
     int i = 0;
-    for (auto _ : state) {
+    while (state.KeepRunningBatch(16)) {
         uint64_t keys[16];
         bool res[16];
         for (int j = 0; j < 16; ++j) {
@@ -116,17 +117,35 @@ BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_query, SSFE<uint64_t>)(benchm
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 
+// sepset query
+BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_query, SepSet<uint64_t>)(benchmark::State& state) {
+    benchmark_query<SepSet<uint64_t>>(ssfe, state);
+}
+BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
+
 // ssfe query_batch
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_query_batch, SSFE<uint64_t>)(benchmark::State& state) {
     benchmark_query_batch<SSFE<uint64_t>>(ssfe, state);
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query_batch)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 
+// sepset query
+BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_query_batch, SepSet<uint64_t>)(benchmark::State& state) {
+    benchmark_query_batch<SepSet<uint64_t>>(ssfe, state);
+}
+BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query_batch)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
+
 // ssfe update
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_update, SSFE<uint64_t>)(benchmark::State& state) {
     benchmark_update<SSFE<uint64_t>>(ssfe, state);
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_update)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
+
+// sepset update
+BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_update, SepSet<uint64_t>)(benchmark::State& state) {
+    benchmark_update<SepSet<uint64_t>>(ssfe, state);
+}
+BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 
 // ssfe build
 BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);

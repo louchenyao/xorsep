@@ -37,3 +37,8 @@ cc_library(
     visibility = ["//visibility:public"],
 )""",
 )
+
+local_repository(
+    name = "dpdk",
+    path = "dpdk",
+)
