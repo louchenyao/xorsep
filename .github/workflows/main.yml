@@ -10,9 +10,7 @@ jobs:
     - uses: actions/checkout@v1
     - run: git submodule init
     - name: build dpdk
-      run: |
-        cd dpdk
-        ./build_dpdk.sh
+      run: cd dpdk && ./build_dpdk.sh
     - name: install bazel
       run: |
         sudo apt-get -y install pkg-config zip g++ zlib1g-dev unzip python
@@ -31,9 +29,7 @@ jobs:
     - uses: actions/checkout@v1
     - run: git submodule init
     - name: build dpdk
-      run: |
-        cd dpdk
-        ./build_dpdk.sh
+      run: cd dpdk && ./build_dpdk.sh
     - name: install bazel
       run: |
         sudo apt-get -y install pkg-config zip g++ zlib1g-dev unzip python
