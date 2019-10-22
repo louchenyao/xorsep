@@ -7,11 +7,13 @@ cc_binary(
     # use -Wno-error=strict-overflow there, because O3 trigers a gcc bug https://stackoverflow.com/questions/12984861/dont-understand-assuming-signed-overflow-warning
     copts = ["-std=c++17", "-O3", "-march=native", "-Wall", "-Wextra", "-Werror", "-Wno-error=strict-overflow"] + SEPSET_COPTS,
     linkopts = SEPSET_LINKOPTS,
+    defines = ["NO_OUTPUT", "DO_NOT_PRINT_SPACE"], # for annoying othello
     deps = [
         "@benchmark//:benchmark", 
         "@benchmark//:benchmark_main",
         "@perfevent//:all",
         "@dpdk//:sepset",
+        "@othello//:othello_wrapper",
         "//:ssfehash",
         "//:dev_utils",
     ]

@@ -42,3 +42,8 @@ local_repository(
     name = "dpdk",
     path = "dpdk",
 )
+
+local_repository(
+    name = "othello",
+    path = "othello",
+)
