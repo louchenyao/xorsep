@@ -34,6 +34,18 @@ class CRC32Family {
         return std::make_tuple<uint32_t, uint32_t, uint32_t>(h1, h2, h3);
     }
 
+    std::tuple<uint32_t, uint32_t, uint32_t> hash(KEY_TYPE key, int hash_index) {
+        uint64_t h1 = SEEDS[hash_index][0], h2 = SEEDS[hash_index][1],
+                 h3 = SEEDS[hash_index][2];
+        uint64_t *t = (uint64_t *)&key;
+        for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
+            h1 = _mm_crc32_u64(h1, t[i]);
+            h2 = _mm_crc32_u64(h2, t[i]);
+            h3 = _mm_crc32_u64(h3, t[i]);
+        }
+        return std::make_tuple<uint32_t, uint32_t, uint32_t>(h1, h2, h3);
+    }
+
     uint32_t hash_once(KEY_TYPE key, int mod) {
         uint64_t h = 12191410945815747277u;
         uint64_t *t = (uint64_t *)&key;
@@ -41,6 +53,15 @@ class CRC32Family {
             h ^= _mm_crc32_u64(h, t[i]);
         }
         return h % mod;
+    }
+
+    uint32_t hash_once(KEY_TYPE key) {
+        uint64_t h = 12191410945815747277u;
+        uint64_t *t = (uint64_t *)&key;
+        for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
+            h ^= _mm_crc32_u64(h, t[i]);
+        }
+        return h;
     }
 };
 
