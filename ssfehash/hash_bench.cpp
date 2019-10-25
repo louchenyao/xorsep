@@ -32,7 +32,9 @@ static void BM_hash_once(benchmark::State& state) {
 BENCHMARK_TEMPLATE(BM_hash, CRC32Family<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash, MixFamily<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash, Murmur3Family<uint64_t>);
+BENCHMARK_TEMPLATE(BM_hash, XXH32Family<uint64_t>);
 
 BENCHMARK_TEMPLATE(BM_hash_once, CRC32Family<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash_once, MixFamily<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash_once, Murmur3Family<uint64_t>);
+BENCHMARK_TEMPLATE(BM_hash_once, XXH32Family<uint64_t>);

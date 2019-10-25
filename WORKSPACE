@@ -38,6 +38,20 @@ cc_library(
 )""",
 )
 
+new_git_repository(
+    name = "xxhash",
+    remote = "https://github.com/Cyan4973/xxHash.git",
+    commit = "e2f4695899e831171ecd2e780078474712ea61d3",
+    build_file_content = """
+cc_library(
+    name = "xxhash",
+    hdrs = ["xxhash.h", "xxh3.h"],
+    srcs = ["xxhash.c"],
+    copts = ["-O3", "-march=native", "-Wall", "-Wextra", "-Werror"],
+    visibility = ["//visibility:public"],
+)""",
+)
+
 local_repository(
     name = "dpdk",
     path = "dpdk",

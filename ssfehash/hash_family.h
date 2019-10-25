@@ -4,6 +4,7 @@
 #include <random>
 #include <nmmintrin.h>
 #include <MurmurHash3.h>
+#include "xxhash.h"
 
 const int HASH_FAMILY_NUM = 256;
 const uint64_t SEEDS[HASH_FAMILY_NUM][3] = {
@@ -138,6 +139,43 @@ class Murmur3Family {
         return h;
     }
 };
+
+template <typename KEY_TYPE>
+class XXH32Family {
+   public:
+    XXH32Family() {
+        // require the size of KEY_TYPE is the times of 32 bits
+        assert(sizeof(KEY_TYPE) % 4 == 0);
+    }
+    std::tuple<uint32_t, uint32_t, uint32_t> hash(KEY_TYPE key, int hash_index,
+                                                  int mod) {
+        uint32_t h1 = XXH32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][0]);
+        uint32_t h2 = XXH32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][1]);
+        uint32_t h3 = XXH32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][2]);
+        h1 %= mod;
+        h2 %= mod;
+        h3 %= mod;
+        return std::make_tuple(h1, h2, h3);
+    }
+
+    std::tuple<uint32_t, uint32_t, uint32_t> hash(KEY_TYPE key, int hash_index) {
+        uint32_t h1 = XXH32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][0]);
+        uint32_t h2 = XXH32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][1]);
+        uint32_t h3 = XXH32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][2]);
+        return std::make_tuple(h1, h2, h3);
+    }
+
+    uint32_t hash_once(KEY_TYPE key, int mod) {
+        uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), 1445563897);
+        return h % mod;
+    }
+
+    uint32_t hash_once(KEY_TYPE key) {
+        uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), 1445563897);
+        return h;
+    }
+};
+
 
 template <typename KEY_TYPE>
 class FakeRandomFamily {

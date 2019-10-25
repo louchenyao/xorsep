@@ -24,6 +24,7 @@ cc_library(
     hdrs = glob(["ssfehash/*.h"]),
     deps = [
         "@smhasher//:murmurhash3",
+        "@xxhash//:xxhash",
     ]
 )
 
@@ -43,6 +44,7 @@ cc_test(
     deps = [
         "//:ssfehash",
         "//:dev_utils",
+        "@xxhash//:xxhash",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
     ]
