@@ -103,21 +103,23 @@ class MixFamily {
     }
 
     uint32_t hash_once(KEY_TYPE key, int mod) {
-        uint64_t h = 12191410945815747277u;
-        uint64_t *t = (uint64_t *)&key;
-        for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
-            h ^= _mm_crc32_u64(h, t[i]);
-        }
+        // uint64_t h = 43263553;
+        // uint64_t *t = (uint64_t *)&key;
+        // for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
+        //     h ^= _mm_crc32_u64(h, t[i]);
+        // }
+        uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), 1445563897);
         return h % mod;
     }
 
     uint32_t hash_once(KEY_TYPE key) {
-        uint64_t h = 12191410945815747277u;
-        uint64_t *t = (uint64_t *)&key;
-        for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
-            h ^= _mm_crc32_u64(h, t[i]);
-        }
-        return uint32_t(h);
+        // uint64_t h = 43263553;
+        // uint64_t *t = (uint64_t *)&key;
+        // for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
+        //     h ^= _mm_crc32_u64(h, t[i]);
+        // }
+        uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), 1445563897);
+        return h;
     }
 };
 

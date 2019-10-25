@@ -27,11 +27,8 @@ class SSFE {
         assert(data_ == nullptr);
 
         max_capacity_ = max_capacity;
-        int max_load = SSFE_GROUP_BITS / 1.5; // TODO (Chenyao): Try to optimize these constants.
-        group_num_ = max_capacity / max_load + 1;
-
         for (int i = 1; ; i *= 2) {
-            if (i >= group_num_) {
+            if (double(i*SSFE_GROUP_BITS)/max_capacity >= 1.4) {
                 group_num_ = i;
                 break;
             }
@@ -47,6 +44,11 @@ class SSFE {
         assert(data_ != nullptr);
 
         //print_space_utilization("SSFE", data_size, max_capacity);
+    }
+
+    // get_space_usage returns a tuple (actual size, max capacity size)
+    std::tuple<uint32_t, uint32_t> get_space_usage() {
+        return std::make_tuple(uint32_t(group_num_ + group_num_ * (SSFE_GROUP_BITS/8)), uint32_t(max_capacity_ / 8));
     }
 
     void clear() {

@@ -3,6 +3,17 @@
 #include "ssfehash/ssfe.h"
 #include "dev_utils/dev_utils.h"
 
+TEST(SSFE, BuildWithSpecificSizes) {
+    // The total memory size of SSFE should be max_capacity*i. But it rounds up to 256*k, where k is the power of 2.
+    // There we want to test if is the SSFE able to build when it doesn't round the group size up.
+    for (double i = 1; i < 2; i += 0.05) {
+        int n = double(1<<20) / i - 1;
+        std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(n);
+        SSFE<uint64_t> ssfe(kvs.size());
+        ssfe.build(kvs);
+    }
+}
+
 template<typename SSFE_T>
 void test_ssfe() {
     std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(100000);
