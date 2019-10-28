@@ -123,8 +123,9 @@ bool build_bitset_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
     for (int i = 0; i < n; i++) {  // i-th row
         // find a row s.t. a[row][j] = true, then swap it to i-th row
         bool found = false;
+        int row = i;
         for (; j < m; j++) {
-            for (int row = i; row < n; row++) {
+            for (row = i; row < n; row++) {
                 if (get_bit(a[row], j)) {
                     // swap a[row] and a[i]
                     for (int k = j/64; k < bitset_len; k++) {
@@ -145,7 +146,7 @@ bool build_bitset_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
         if (!found) return false;
 
         // elimnate other rows which j-th column elements are true
-        for (int k = i + 1; k < n; k++) {  // elimnate k-th row
+        for (int k = row + 1; k < n; k++) {  // elimnate k-th row
             if (get_bit(a[k], j)) {
                 // set l < m + 1 to xor the answer
                 for (int l = j/64; l < bitset_len; l++) {
