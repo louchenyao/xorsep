@@ -4,14 +4,15 @@
 
 #include "ssfehash/group.h"
 #include "dev_utils/dev_utils.h"
+#include "dev_utils/perf_event_helper.h" 
 
 
 std::tuple<std::vector<std::pair<uint64_t, bool>>, int> prepare() {
-    std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues((256 - 8) / 1.5);
+    std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(256 / 1.4);
     
     uint8_t *data = new uint8_t[256 / 8];
     // find a feasible hash function, use that to benchmark the equations solver
-    int hash_index = HashGroup::build<uint64_t, MixFamily<uint64_t>>(kvs, data, 256 / 8);
+    int hash_index = HashGroup::build<uint64_t, MixFamily<uint64_t>>(kvs, data, 256 / 8, false);
     assert(hash_index >= 0);
     delete[] data;
 
@@ -21,8 +22,11 @@ std::tuple<std::vector<std::pair<uint64_t, bool>>, int> prepare() {
 static void BM_build_naive_(benchmark::State& state) {
     auto [kvs, hash_index] = prepare();
     uint8_t *data = new uint8_t[256 / 8];
-    for (auto _ : state) {
-        benchmark::DoNotOptimize(HashGroup::build_naive_<uint64_t, MixFamily<uint64_t>>(kvs, data, 256/8 - 1, hash_index));
+    {
+        PerfEventBenchamrkWrapper e(state);
+        for (auto _ : state) {
+            benchmark::DoNotOptimize(HashGroup::build_naive_<uint64_t, MixFamily<uint64_t>>(kvs, data, 256/8, hash_index));
+        }
     }
     state.SetItemsProcessed(int64_t(state.iterations()) *
                             int64_t(kvs.size()));
@@ -32,8 +36,11 @@ static void BM_build_naive_(benchmark::State& state) {
 static void BM_build_bitset_(benchmark::State& state) {
     auto [kvs, hash_index] = prepare();
     uint8_t *data = new uint8_t[256 / 8];
-    for (auto _ : state) {
-        benchmark::DoNotOptimize(HashGroup::build_bitset_<uint64_t, MixFamily<uint64_t>>(kvs, data, 256/8 - 1, hash_index));
+    {
+        PerfEventBenchamrkWrapper e(state);
+        for (auto _ : state) {
+            benchmark::DoNotOptimize(HashGroup::build_bitset_<uint64_t, MixFamily<uint64_t>>(kvs, data, 256/8, hash_index));
+        }
     }
     state.SetItemsProcessed(int64_t(state.iterations()) *
                             int64_t(kvs.size()));
