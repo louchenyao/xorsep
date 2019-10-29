@@ -49,3 +49,16 @@ cc_test(
         "@gtest//:gtest_main",
     ]
 )
+
+cc_binary(
+    name = "group_profile",
+    srcs = glob(["ssfehash/group_profile.cpp"]),
+    copts = ["-std=c++17", "-O3", "-march=native", "-Wall", "-Wextra", "-Werror", "-Wno-error=strict-overflow"],
+    deps = [
+        "//:ssfehash",
+        "//:dev_utils",
+        "@xxhash//:xxhash",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main",
+    ]
+)

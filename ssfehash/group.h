@@ -97,6 +97,89 @@ bool build_naive_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
     return true;
 }
 
+// This function outputs debug informations for profiling.
+template <typename KEY_TYPE, class HASH_FAMILY>
+bool build_profile_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
+                 uint8_t *data, size_t data_size, int hash_family) {
+    int n = kvs.size();
+    int m = data_size * 8;
+    HASH_FAMILY h;
+
+    // build the hash matrix
+    bool a[n][m + 1];
+    memset(a, 0, sizeof(a));
+    for (int i = 0; i < n; i++) {
+        auto [h1, h2, h3] = h.hash(kvs[i].first, hash_family, data_size * 8);
+        a[i][h1] ^= true;
+        a[i][h2] ^= true;
+        a[i][h3] ^= true;
+        a[i][m] = kvs[i].second;
+    }
+
+    // profiling counters
+    assert(m == 256);
+    int tot_swap = 0;
+    int swap_for_jth_column = 0;
+
+    // do gauess elimnation
+    int j = 0;                     // the column with first non-zero entry
+    for (int i = 0; i < n; i++) {  // i-th row
+        // find a row s.t. a[row][j] = true, then swap it to i-th row
+        int row = i;
+        bool found = false;
+        for (; j < m; j++) {
+            for (row = i; row < n; row++) {
+                if (a[row][j]) {
+                    // swap a[row] and a[i]
+                    for (int k = j; k < m + 1; k++) {
+                        std::swap(a[i][k], a[row][k]);
+                    }
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                break;
+            }
+        }
+        // printf("i = %d, j = %d\n", i, j);
+        if (!found) return false;
+
+        // elimnate other rows which j-th column elements are true
+        swap_for_jth_column = 0;
+        for (int k = row + 1; k < n; k++) {  // elimnate k-th row
+            if (a[k][j]) {
+                swap_for_jth_column += 1;
+                //printf("j = %d, swap row %d with row %d", j, i, k);
+                // set l < m + 1 to xor the answer
+                for (int l = j; l < m + 1; l++) {
+                    a[k][l] ^= a[i][l];
+                }
+            }
+        }
+        tot_swap += swap_for_jth_column;
+        printf("swap %d times for j = %d\n", swap_for_jth_column, j);
+    }
+    printf("swap %d times in total\n", tot_swap);
+
+    // calculate result
+    memset(data, 0, data_size);
+    for (int i = n - 1; i >= 0; i--) {
+        // find the first non-zero column
+        for (j = 0; j < m && a[i][j] == false; j++)
+            ;
+        assert(j < m);
+
+        set_bit(data, j, a[i][m]);
+        for (int k = j + 1; k < m; k++) {
+            flip_bit(data, j, a[i][k] & get_bit(data, k));
+        }
+        // printf("i = %d, x = %d\n", i, int(x_[i]));
+    }
+
+    return true;
+}
+
 template <typename KEY_TYPE, class HASH_FAMILY>
 bool build_bitset_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
                  uint8_t *data, int data_size, int hash_family) {

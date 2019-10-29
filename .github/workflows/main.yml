@@ -3,25 +3,22 @@ name: CI
 on: [push]
 
 jobs:
-  build_test:
+  test:
     runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v1
     - run: git submodule update --init
-    - name: build dpdk
-      run: ./build_dpdk.sh
-      working-directory: dpdk
     - name: install bazel
       run: |
         sudo apt-get -y install pkg-config zip g++ zlib1g-dev unzip python
         wget https://github.com/bazelbuild/bazel/releases/download/0.29.1/bazel-0.29.1-installer-linux-x86_64.sh
         chmod +x bazel-0.29.1-installer-linux-x86_64.sh
         sudo ./bazel-0.29.1-installer-linux-x86_64.sh
-    - name: build
-      run: bazel build //...
     - name: test
       run: bazel run //:test
+    - name: profile
+      run: bazel run //:group_profile
 
   bench:
     runs-on: ubuntu-latest
