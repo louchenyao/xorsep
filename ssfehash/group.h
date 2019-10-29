@@ -158,7 +158,7 @@ bool build_profile_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
             }
         }
         tot_swap += swap_for_jth_column;
-        printf("swap %d times for j = %d\n", swap_for_jth_column, j);
+        //printf("swap %d times for j = %d\n", swap_for_jth_column, j);
     }
     printf("swap %d times in total\n", tot_swap);
 

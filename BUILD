@@ -58,7 +58,5 @@ cc_binary(
         "//:ssfehash",
         "//:dev_utils",
         "@xxhash//:xxhash",
-        "@gtest//:gtest",
-        "@gtest//:gtest_main",
     ]
 )
