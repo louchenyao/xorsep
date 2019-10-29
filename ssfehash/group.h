@@ -3,6 +3,7 @@
 #include <cstring>
 #include <random>
 #include <vector>
+#include <x86intrin.h>
 
 #include "ssfehash/hash_family.h"
 
@@ -243,16 +244,23 @@ bool build_bitset_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
 
     // calculate result
     memset(data, 0, data_size);
+    uint64_t *d64 = (uint64_t *)data;
     for (int i = n - 1; i >= 0; i--) {
         // find the first non-zero column
-        for (j = 0; j < m && get_bit(a[i], j) == false; j++)
-            ;
-        assert(j < m);
-
-        set_bit(data, j, b[i]);
-        for (int k = j + 1; k < m; k++) {
-            flip_bit(data, j, get_bit(a[i], k) & get_bit(data, k));
+        int j = 0;
+        for (int k = 0; k < bitset_len; k++) {
+            j = _tzcnt_u64(a[i][k]);
+            if (j != 64) {
+                j += k*64;
+                break;
+            }
         }
+
+        bool d = false;
+        for (int k = j/64; k < bitset_len; k++) {
+            d ^= _popcnt64(a[i][k] & d64[k]) % 2;
+        }
+        set_bit(data, j, d^b[i]);
     }
     return true;
 }
