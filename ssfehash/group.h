@@ -48,9 +48,10 @@ bool build_naive_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
     int j = 0;                     // the column with first non-zero entry
     for (int i = 0; i < n; i++) {  // i-th row
         // find a row s.t. a[row][j] = true, then swap it to i-th row
+        int row = i;
         bool found = false;
         for (; j < m; j++) {
-            for (int row = i; row < n; row++) {
+            for (row = i; row < n; row++) {
                 if (a[row][j]) {
                     // swap a[row] and a[i]
                     for (int k = j; k < m + 1; k++) {
@@ -68,7 +69,7 @@ bool build_naive_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
         if (!found) return false;
 
         // elimnate other rows which j-th column elements are true
-        for (int k = i + 1; k < n; k++) {  // elimnate k-th row
+        for (int k = row + 1; k < n; k++) {  // elimnate k-th row
             if (a[k][j]) {
                 // set l < m + 1 to xor the answer
                 for (int l = j; l < m + 1; l++) {
