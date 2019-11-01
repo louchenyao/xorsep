@@ -265,6 +265,102 @@ bool build_bitset_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
     return true;
 }
 
+
+// len is the length of the data array
+inline int tzcnt(uint64_t *data, int len) {
+    for (int i = 0; i < len; i++) {
+        if (data[i]) {
+            return i*64 + _tzcnt_u64(data[i]);
+        }
+    }
+    return len*64;
+}
+
+template <typename KEY_TYPE, class HASH_FAMILY>
+bool build_bitset_2_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
+                 uint8_t *data, int data_size, int hash_family) {
+    int n = kvs.size();
+    int m = data_size * 8;
+    HASH_FAMILY h;
+
+    // asert the matrix size is n*256
+    assert(n <= m);
+    assert(m == 256);
+
+
+    // build the hash matrix
+    const int bitset_len = 256 / 64;
+    uint64_t a[256][bitset_len];
+    uint64_t fnz_a[256][bitset_len]; // First non-zero entry of a. It the transpose of a which only reserves the first non-zero entry.
+    bool b[n];
+    memset(a, 0, sizeof(a));
+    memset(fnz_a, 0, sizeof(fnz_a));
+    memset(b, 0, sizeof(b));
+
+    for (int i = 0; i < n; i++) {
+        auto [h1, h2, h3] = h.hash(kvs[i].first, hash_family, m);
+        flip_bit(a[i], h1);
+        flip_bit(a[i], h2);
+        flip_bit(a[i], h3);
+        set_bit(fnz_a[tzcnt(a[i], bitset_len)], i);
+        b[i] = kvs[i].second;
+    }
+
+    // do gauss elimnation
+    int rank = 0;
+    int pivot_rows[256]; // pivot_rows[j] means the row which pivot is on j-th column
+    for (int j = 0; j < 256; j++) { // j-th column
+        int pivot_row = tzcnt(fnz_a[j], bitset_len);
+        pivot_rows[j] = pivot_row;
+        if (pivot_row >= 256) continue;
+        //printf("pivot_row = %d\n", pivot_row);
+        rank += 1;
+        flip_bit(fnz_a[j], pivot_row);
+
+        // elimnate other rows
+        while (true) {
+            int target_row = tzcnt(fnz_a[j], bitset_len);
+            if (target_row >= 256) break;
+            flip_bit(fnz_a[j], target_row);
+            //printf("elimnating %d\n", target_row);
+
+            // elimnate target_row
+            for (int k = j/64; k < bitset_len; k++) {
+                a[target_row][k] ^= a[pivot_row][k];
+                //printf("a[target_row][k] = %lu\n", a[target_row][k]);
+            }
+            b[target_row] ^= b[pivot_row];
+
+            // find the new first non-zero entry
+            int new_fnz_column = tzcnt(a[target_row], bitset_len);
+            if (new_fnz_column < 256) {
+                flip_bit(fnz_a[new_fnz_column], target_row);
+            } else {
+                return false; // one row is just disappeared! The row rank won't be full anymore.
+            }
+        }
+    }
+
+    if (rank < n) return false;
+
+    // substitute back
+    memset(data, 0, bitset_len);
+    uint64_t *d64 = (uint64_t *)data;
+    for (int j = 255; j >= 0; j--) {
+        int pivot_row = pivot_rows[j];
+        if (pivot_row >= 256) continue;
+
+        bool d = false;
+        for (int k = j/64; k < bitset_len; k++) {
+            d ^= _popcnt64(a[pivot_row][k] & d64[k]) % 2;
+        }
+        set_bit(data, j, d^b[pivot_row]);
+        //printf("pivot_row = %d\n", pivot_row);
+        //printf("d = %d, b[pivot_row] = %d\n", int(d), int(b[pivot_row]));
+    }
+    return true;
+}
+
 template <typename KEY_TYPE, class HASH_FAMILY>
 int build(const std::vector<std::pair<KEY_TYPE, bool> > &kvs, uint8_t *data,
           size_t data_size, bool store_index_to_data = true) {

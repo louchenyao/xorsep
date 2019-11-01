@@ -11,6 +11,24 @@ TEST(HashGroup, BitManipulation) {
     EXPECT_EQ(d, 20);
 }
 
+TEST(HashGroup, build_bitset_2_) {
+    // prepare data
+    std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(220);
+    uint8_t *data = new uint8_t[256 / 8];
+    int hash_index = HashGroup::build<uint64_t, MixFamily<uint64_t>>(kvs, data, 256 / 8, false);
+    assert(hash_index >= 0);
+    memset(data, 0, 256 / 8);
+
+    // build
+    bool succ = HashGroup::build_bitset_2_<uint64_t, MixFamily<uint64_t>>(kvs, data, 256 / 8, false);
+    EXPECT_EQ(succ, true);
+
+    // verify
+    for (auto &kv : kvs) {
+        bool r = HashGroup::query_group_size_256<uint64_t, MixFamily<uint64_t>>(kv.first, data, hash_index);
+        EXPECT_EQ(kv.second, r);
+    }
+}
 
 TEST(HashGroup, WithoutStoringHashIndexInData) {
     printf("{");
