@@ -153,7 +153,7 @@ BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_update, SepSet<uint64_t>)(b
     benchmark_update<SepSet<uint64_t>>(ssfe, state);
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
-BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Arg(1216*10)->Arg(1216*100)->Arg(1216*1000)->Arg(1216*10000);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*8)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*128)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*512)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*1024)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*4096);
 
 // ssfe build
 BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
