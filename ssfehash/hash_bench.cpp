@@ -34,9 +34,11 @@ BENCHMARK_TEMPLATE(BM_hash3, MixFamily<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash3, Murmur3Family<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash3, XXH32Family<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash3, MixFamily256<uint64_t>);
+BENCHMARK_TEMPLATE(BM_hash3, MixFamily2_256<uint64_t>);
 
 BENCHMARK_TEMPLATE(BM_hash1, CRC32Family<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash1, MixFamily<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash1, Murmur3Family<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash1, XXH32Family<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash1, MixFamily256<uint64_t>);
+BENCHMARK_TEMPLATE(BM_hash1, MixFamily2_256<uint64_t>);

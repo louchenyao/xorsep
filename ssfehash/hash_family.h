@@ -93,6 +93,30 @@ class MixFamily256 {
 };
 
 template <typename KEY_TYPE>
+class MixFamily2_256 {
+   public:
+    MixFamily2_256() {
+        // require the size of KEY_TYPE is the times of 64 bits
+        assert(sizeof(KEY_TYPE) % 8 == 0);
+    }
+
+    // the size of each hash value is 8 bits 
+    std::tuple<uint8_t, uint8_t, uint8_t> hash3(KEY_TYPE key, int hash_index) {
+        uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][0]);
+        return std::make_tuple<uint8_t, uint8_t, uint8_t>(h & 0xff, (h >> 8) & 0xff, (h >> 16) & 0xff);
+    }
+
+    uint32_t hash1(KEY_TYPE key) {
+        uint64_t h = 12191410945815747277u;
+        uint64_t *t = (uint64_t *)&key;
+        for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
+            h ^= _mm_crc32_u64(h, t[i]);
+        }
+        return h;
+    }
+};
+
+template <typename KEY_TYPE>
 class Murmur3Family {
    public:
     Murmur3Family() {

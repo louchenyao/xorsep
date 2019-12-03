@@ -33,6 +33,8 @@ TEST(HashFamilies, Basic) {
     test_hash_family<XXH32Family<uint64_t> >();
     // test_hash_family<MixFamily256<long double> >();
     test_hash_family<MixFamily256<uint64_t> >();
+
+    test_hash_family<MixFamily2_256<uint64_t> >();
 }
 
 TEST(xxHash, Basic) {
