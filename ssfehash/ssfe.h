@@ -12,7 +12,7 @@ const int SSFE_GROUP_BITS = 256;
 
 template <typename KEY_TYPE>
 class SSFE {
-    typedef MixFamily<KEY_TYPE> HASH;
+    typedef MixFamily2_256<KEY_TYPE> HASH;
    public:
     SSFE() = default;
     SSFE(int max_capacity) {
@@ -28,7 +28,7 @@ class SSFE {
 
         max_capacity_ = max_capacity;
         for (int i = 1; ; i *= 2) {
-            if (double(i*SSFE_GROUP_BITS)/max_capacity >= 1.4) {
+            if (double(i*SSFE_GROUP_BITS)/max_capacity >= 1.41) {
                 group_num_ = i;
                 break;
             }
@@ -79,6 +79,7 @@ class SSFE {
             if (index < 0) {
                 printf("i = %d\n", i);
                 printf("group size: %d\n", (int)groups_[i].size());
+                fflush(stdout);
                 assert(false);
             }
         }
