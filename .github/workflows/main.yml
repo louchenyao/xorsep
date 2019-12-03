@@ -43,8 +43,9 @@ jobs:
         sudo ./bazel-0.29.1-installer-linux-x86_64.sh
     - name: bench
       run: |
+        bazel run //:bench -- --benchmark_out_format=csv --benchmark_out=bench.csv
         mkdir -p benchmark_results
-        bazel run //:bench -- --benchmark_out_format=csv --benchmark_out=benchmark_results/bench.csv
+        mv bench.csv benchmark_results
     - uses: actions/upload-artifact@v1
       with:
         name: benchmark_results
