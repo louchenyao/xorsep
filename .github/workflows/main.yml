@@ -36,11 +36,13 @@ jobs:
         chmod +x bazel-0.29.1-installer-linux-x86_64.sh
         sudo ./bazel-0.29.1-installer-linux-x86_64.sh
     - name: bench
-      run: bazel run //:bench -- --benchmark_out_format=csv --benchmark_out=bench.csv
+      run: |
+        mkdir -p benchmark_results
+        bazel run //:bench -- --benchmark_out_format=csv --benchmark_out=benchmark_results/bench.csv
     - uses: actions/upload-artifact@v1
       with:
-        name: bench.csv
-        path: bench.csv
+        name: benchmark_results
+        path: benchmark_results
 
   experiment:
     runs-on: ubuntu-latest
