@@ -38,10 +38,10 @@ bool build_naive_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
     bool a[n][m + 1];
     memset(a, 0, sizeof(a));
     for (int i = 0; i < n; i++) {
-        auto [h1, h2, h3] = h.hash(kvs[i].first, hash_family, data_size * 8);
-        a[i][h1] ^= true;
-        a[i][h2] ^= true;
-        a[i][h3] ^= true;
+        auto [h1, h2, h3] = h.hash3(kvs[i].first, hash_family);
+        a[i][h1 % m] ^= true;
+        a[i][h2 % m] ^= true;
+        a[i][h3 % m] ^= true;
         a[i][m] = kvs[i].second;
     }
 
@@ -110,10 +110,10 @@ bool build_profile_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
     bool a[n][m + 1];
     memset(a, 0, sizeof(a));
     for (int i = 0; i < n; i++) {
-        auto [h1, h2, h3] = h.hash(kvs[i].first, hash_family, data_size * 8);
-        a[i][h1] ^= true;
-        a[i][h2] ^= true;
-        a[i][h3] ^= true;
+        auto [h1, h2, h3] = h.hash3(kvs[i].first, hash_family);
+        a[i][h1 % m] ^= true;
+        a[i][h2 % m] ^= true;
+        a[i][h3 % m] ^= true;
         a[i][m] = kvs[i].second;
     }
 
@@ -196,10 +196,10 @@ bool build_bitset_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
     memset(b, 0, sizeof(b));
 
     for (int i = 0; i < n; i++) {
-        auto [h1, h2, h3] = h.hash(kvs[i].first, hash_family, m);
-        flip_bit(a[i], h1);
-        flip_bit(a[i], h2);
-        flip_bit(a[i], h3);
+        auto [h1, h2, h3] = h.hash3(kvs[i].first, hash_family);
+        flip_bit(a[i], h1 % m);
+        flip_bit(a[i], h2 % m);
+        flip_bit(a[i], h3 % m);
         b[i] = kvs[i].second;
     }
 
@@ -296,10 +296,10 @@ bool build_bitset_2_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
     memset(b, 0, sizeof(b));
 
     for (int i = 0; i < n; i++) {
-        auto [h1, h2, h3] = h.hash(kvs[i].first, hash_family, m);
-        flip_bit(a[i], h1);
-        flip_bit(a[i], h2);
-        flip_bit(a[i], h3);
+        auto [h1, h2, h3] = h.hash3(kvs[i].first, hash_family);
+        flip_bit(a[i], h1 % m);
+        flip_bit(a[i], h2 % m);
+        flip_bit(a[i], h3 % m);
         set_bit(fnz_a[tzcnt(a[i], bitset_len)], i);
         b[i] = kvs[i].second;
     }
@@ -391,15 +391,16 @@ int build(const std::vector<std::pair<KEY_TYPE, bool> > &kvs, uint8_t *data,
 template <typename KEY_TYPE, class HASH_FAMILY>
 bool query(KEY_TYPE k, uint8_t *data, int data_size) {
     HASH_FAMILY h;
-    auto [h1, h2, h3] = h.hash(k, data[0], (data_size - 1) * 8);
-    return get_bit(data + 1, h1) ^ get_bit(data + 1, h2) ^
-           get_bit(data + 1, h3);
+    uint32_t group_size = (data_size - 1) * 8;
+    auto [h1, h2, h3] = h.hash3(k, data[0]);
+    return get_bit(data + 1, h1 % group_size) ^ get_bit(data + 1, h2 % group_size) ^ get_bit(data + 1, h3 % group_size);
 }
 
 template <typename KEY_TYPE, class HASH_FAMILY>
 bool query_group_size_256(KEY_TYPE k, uint8_t *data, int hash_index) {
     HASH_FAMILY h;
-    auto [h1, h2, h3] = h.hash(k, hash_index);
+    auto [h1, h2, h3] = h.hash3(k, hash_index);
+    // TODO: it doesn't have to do h1&255, if the range is alread in [0, 255] when the hash family is MixFamily256  
     return get_bit(data, h1 & 255) ^ get_bit(data, h2 & 255) ^
            get_bit(data, h3 & 255);
 }

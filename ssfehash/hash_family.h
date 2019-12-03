@@ -1,9 +1,10 @@
 #pragma once
 
+#include <iostream> 
 #include <tuple>
 #include <random>
-#include <nmmintrin.h>
 #include <MurmurHash3.h>
+#include <nmmintrin.h>
 #include "xxhash.h"
 
 const int HASH_FAMILY_NUM = 256;
@@ -18,23 +19,7 @@ class CRC32Family {
         // require the size of KEY_TYPE is the times of 64 bits
         assert(sizeof(KEY_TYPE) % 8 == 0);
     }
-    std::tuple<uint32_t, uint32_t, uint32_t> hash(KEY_TYPE key, int hash_index,
-                                                  int mod) {
-        uint64_t h1 = SEEDS[hash_index][0], h2 = SEEDS[hash_index][1],
-                 h3 = SEEDS[hash_index][2];
-        uint64_t *t = (uint64_t *)&key;
-        for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
-            h1 = _mm_crc32_u64(h1, t[i]);
-            h2 = _mm_crc32_u64(h2, t[i]);
-            h3 = _mm_crc32_u64(h3, t[i]);
-        }
-        h1 %= mod;
-        h2 %= mod;
-        h3 %= mod;
-        return std::make_tuple<uint32_t, uint32_t, uint32_t>(h1, h2, h3);
-    }
-
-    std::tuple<uint32_t, uint32_t, uint32_t> hash(KEY_TYPE key, int hash_index) {
+    std::tuple<uint32_t, uint32_t, uint32_t> hash3(KEY_TYPE key, int hash_index) {
         uint64_t h1 = SEEDS[hash_index][0], h2 = SEEDS[hash_index][1],
                  h3 = SEEDS[hash_index][2];
         uint64_t *t = (uint64_t *)&key;
@@ -45,17 +30,7 @@ class CRC32Family {
         }
         return std::make_tuple<uint32_t, uint32_t, uint32_t>(h1, h2, h3);
     }
-
-    uint32_t hash_once(KEY_TYPE key, int mod) {
-        uint64_t h = 12191410945815747277u;
-        uint64_t *t = (uint64_t *)&key;
-        for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
-            h ^= _mm_crc32_u64(h, t[i]);
-        }
-        return h % mod;
-    }
-
-    uint32_t hash_once(KEY_TYPE key) {
+    uint32_t hash1(KEY_TYPE key) {
         uint64_t h = 12191410945815747277u;
         uint64_t *t = (uint64_t *)&key;
         for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
@@ -72,24 +47,8 @@ class MixFamily {
         // require the size of KEY_TYPE is the times of 64 bits
         assert(sizeof(KEY_TYPE) % 8 == 0);
     }
-    std::tuple<uint32_t, uint32_t, uint32_t> hash(KEY_TYPE key, int hash_index,
-                                                  int mod) {
-        uint64_t h1 = SEEDS[hash_index][0], h2 = SEEDS[hash_index][1],
-                 h3 = SEEDS[hash_index][2];
-        uint64_t *t = (uint64_t *)&key;
-        for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
-            h1 ^= t[i];
-            h2 = _mm_crc32_u64(h2, t[i]*3);
-            h3 = _mm_crc32_u64(h3, t[i]);
-            h3 += __builtin_popcount(h3);
-        }
-        h1 %= mod;
-        h2 %= mod;
-        h3 %= mod;
-        return std::make_tuple<uint32_t, uint32_t, uint32_t>(h1, h2, h3);
-    }
 
-    std::tuple<uint32_t, uint32_t, uint32_t> hash(KEY_TYPE key, int hash_index) {
+    std::tuple<uint32_t, uint32_t, uint32_t> hash3(KEY_TYPE key, int hash_index) {
         uint64_t h1 = SEEDS[hash_index][0], h2 = SEEDS[hash_index][1],
                  h3 = SEEDS[hash_index][2];
         uint64_t *t = (uint64_t *)&key;
@@ -102,22 +61,32 @@ class MixFamily {
         return std::make_tuple<uint32_t, uint32_t, uint32_t>(h1, h2, h3);
     }
 
-    uint32_t hash_once(KEY_TYPE key, int mod) {
-        // uint64_t h = 43263553;
-        // uint64_t *t = (uint64_t *)&key;
-        // for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
-        //     h ^= _mm_crc32_u64(h, t[i]);
-        // }
+    uint32_t hash1(KEY_TYPE key) {
+        //std::cout << "hahs1, key = " << key << std::endl;
         uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), 1445563897);
-        return h % mod;
+        return h;
+    }
+};
+
+template <typename KEY_TYPE>
+class MixFamily256 {
+   public:
+    MixFamily256() {
+        // require the size of KEY_TYPE is the times of 64 bits
+        assert(sizeof(KEY_TYPE) % 8 == 0);
     }
 
-    uint32_t hash_once(KEY_TYPE key) {
-        // uint64_t h = 43263553;
-        // uint64_t *t = (uint64_t *)&key;
-        // for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
-        //     h ^= _mm_crc32_u64(h, t[i]);
-        // }
+    // the size of each hash value is 8 bits 
+    std::tuple<uint8_t, uint8_t, uint8_t> hash3(KEY_TYPE key, int hash_index) {
+        uint64_t h = SEEDS[hash_index][0];
+        uint64_t *t = (uint64_t *)&key;
+        for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
+            h = _mm_crc32_u64(h, t[i]);
+        }
+        return std::make_tuple<uint8_t, uint8_t, uint8_t>(h & 0xff, (h >> 8) & 0xff, (h >> 16) & 0xff);
+    }
+
+    uint32_t hash1(KEY_TYPE key) {
         uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), 1445563897);
         return h;
     }
@@ -130,19 +99,8 @@ class Murmur3Family {
         // require the size of KEY_TYPE is the times of 32 bits
         assert(sizeof(KEY_TYPE) % 4 == 0);
     }
-    std::tuple<uint32_t, uint32_t, uint32_t> hash(KEY_TYPE key, int hash_index,
-                                                  int mod) {
-        uint32_t h1, h2, h3;
-        MurmurHash3_x86_32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][0], &h1);
-        MurmurHash3_x86_32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][1], &h2);
-        MurmurHash3_x86_32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][2], &h3);
-        h1 %= mod;
-        h2 %= mod;
-        h3 %= mod;
-        return std::make_tuple(h1, h2, h3);
-    }
-
-    std::tuple<uint32_t, uint32_t, uint32_t> hash(KEY_TYPE key, int hash_index) {
+    
+    std::tuple<uint32_t, uint32_t, uint32_t> hash3(KEY_TYPE key, int hash_index) {
         uint32_t h1, h2, h3;
         MurmurHash3_x86_32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][0], &h1);
         MurmurHash3_x86_32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][1], &h2);
@@ -150,13 +108,7 @@ class Murmur3Family {
         return std::make_tuple(h1, h2, h3);
     }
 
-    uint32_t hash_once(KEY_TYPE key, int mod) {
-        uint32_t h;
-        MurmurHash3_x86_32((void *)&key, sizeof(KEY_TYPE), 1445563897, &h);
-        return h % mod;
-    }
-
-    uint32_t hash_once(KEY_TYPE key) {
+    uint32_t hash1(KEY_TYPE key) {
         uint32_t h;
         MurmurHash3_x86_32((void *)&key, sizeof(KEY_TYPE), 1445563897, &h);
         return h;
@@ -170,30 +122,15 @@ class XXH32Family {
         // require the size of KEY_TYPE is the times of 32 bits
         assert(sizeof(KEY_TYPE) % 4 == 0);
     }
-    std::tuple<uint32_t, uint32_t, uint32_t> hash(KEY_TYPE key, int hash_index,
-                                                  int mod) {
-        uint32_t h1 = XXH32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][0]);
-        uint32_t h2 = XXH32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][1]);
-        uint32_t h3 = XXH32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][2]);
-        h1 %= mod;
-        h2 %= mod;
-        h3 %= mod;
-        return std::make_tuple(h1, h2, h3);
-    }
 
-    std::tuple<uint32_t, uint32_t, uint32_t> hash(KEY_TYPE key, int hash_index) {
+    std::tuple<uint32_t, uint32_t, uint32_t> hash3(KEY_TYPE key, int hash_index) {
         uint32_t h1 = XXH32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][0]);
         uint32_t h2 = XXH32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][1]);
         uint32_t h3 = XXH32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][2]);
         return std::make_tuple(h1, h2, h3);
     }
 
-    uint32_t hash_once(KEY_TYPE key, int mod) {
-        uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), 1445563897);
-        return h % mod;
-    }
-
-    uint32_t hash_once(KEY_TYPE key) {
+    uint32_t hash1(KEY_TYPE key) {
         uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), 1445563897);
         return h;
     }
@@ -203,21 +140,20 @@ class XXH32Family {
 template <typename KEY_TYPE>
 class FakeRandomFamily {
    public:
-    std::tuple<uint32_t, uint32_t, uint32_t> hash(KEY_TYPE key, int hash_index,
-                                                  int mod) {
+    std::tuple<uint32_t, uint32_t, uint32_t> hash3(KEY_TYPE key, int hash_index) {
         (void)key;
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<uint32_t> dist(0, 0xffffffff);
 
-        uint64_t h1 = ((uint64_t(dist(gen)) << 32) ^ dist(gen) ^ SEEDS[hash_index][0]) % mod;
-        uint64_t h2 = ((uint64_t(dist(gen)) << 32) ^ dist(gen) ^ SEEDS[hash_index][1]) % mod;
-        uint64_t h3 = ((uint64_t(dist(gen)) << 32) ^ dist(gen) ^ SEEDS[hash_index][2]) % mod;
+        uint64_t h1 = ((uint64_t(dist(gen)) << 32) ^ dist(gen) ^ SEEDS[hash_index][0]);
+        uint64_t h2 = ((uint64_t(dist(gen)) << 32) ^ dist(gen) ^ SEEDS[hash_index][1]);
+        uint64_t h3 = ((uint64_t(dist(gen)) << 32) ^ dist(gen) ^ SEEDS[hash_index][2]);
         return std::make_tuple<uint32_t, uint32_t, uint32_t>(h1, h2, h3);
     }
 
-    uint32_t hash_once(KEY_TYPE key, int mod) {
+    uint32_t hash1(KEY_TYPE key) {
         (void)key;
-        return (uint64_t(rand()) << 32 | rand()) % mod;
+        return (uint64_t(rand()) << 32 | rand());
     }
 };

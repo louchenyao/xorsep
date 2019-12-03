@@ -69,7 +69,7 @@ class SSFE {
         size_ = kvs.size();
 
         for (const auto &kv : kvs) {
-            int g = h_.hash_once(kv.first) & group_num_bitmask_;
+            int g = h_.hash1(kv.first) & group_num_bitmask_;
             groups_[g].push_back(kv);
         }
 
@@ -86,7 +86,7 @@ class SSFE {
 
     // update is not thread-safe
     void update(KEY_TYPE key, bool value) {
-        int g = h_.hash_once(key) & group_num_bitmask_;
+        int g = h_.hash1(key) & group_num_bitmask_;
 
         // update value in the vector
         bool found = false;
@@ -115,15 +115,8 @@ class SSFE {
         }
     }
 
-    // bool query_v0(KEY_TYPE key) {
-    //     int g = h_.hash_once(key, group_num_);
-    //     return HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(key, data_ + g*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS/8);
-    // }
-
-    // In contrast to query_v0, this function fetch hash index from hash_index_, not from data_.
-    // Thus, it can prefetch data_ when computing hash.
     bool query(KEY_TYPE key) {
-        int g = h_.hash_once(key) & group_num_bitmask_;
+        int g = h_.hash1(key) & group_num_bitmask_;
         int offset = g*(SSFE_GROUP_BITS/8);
         __builtin_prefetch(data_ + offset);
         return HashGroup::query_group_size_256<KEY_TYPE, HASH>(key, data_ +offset, hash_index_[g]);
@@ -133,7 +126,7 @@ class SSFE {
         assert(batch_size <= 16);
         int g[16];
         for (int i = 0; i < batch_size; i++) {
-            g[i] = h_.hash_once(keys[i]) & group_num_bitmask_;
+            g[i] = h_.hash1(keys[i]) & group_num_bitmask_;
             __builtin_prefetch(data_ + g[i]*(SSFE_GROUP_BITS/8));
         }
         for (int i = 0; i < batch_size; i++) {
@@ -193,7 +186,7 @@ class SSFE_DONG {
     void build(const std::vector<std::pair<KEY_TYPE, bool>> &kvs) {
         std::vector<std::pair<KEY_TYPE, bool>> groups[group_num_];
         for (const auto &kv : kvs) {
-            int g = h_.hash_once(kv.first, group_num_);
+            int g = h_.hash1(kv.first) % group_num_;
             groups[g].push_back(kv);
         }
 
@@ -226,7 +219,7 @@ class SSFE_DONG {
     }
 
     bool query(KEY_TYPE key) {
-        int g = h_.hash_once(key, group_num_);
+        int g = h_.hash1(key) % group_num_;
         uint8_t *group = groups_[g];
 
         uint16_t len = 0;
@@ -238,7 +231,7 @@ class SSFE_DONG {
         assert(batch_size <= 16);
         int g[16];
         for (int i = 0; i < batch_size; i++) {
-            g[i] = h_.hash_once(keys[i], group_num_);
+            g[i] = h_.hash1(keys[i]) % group_num_;
             __builtin_prefetch(groups_ + g[i]);
         }
 
