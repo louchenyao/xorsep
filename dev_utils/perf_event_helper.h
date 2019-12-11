@@ -1,7 +1,7 @@
 #include <benchmark/benchmark.h>
-#include "PerfEvent.hpp"
 
 #ifdef __linux__
+#include "PerfEvent.hpp"
 #include <linux/perf_event.h>
 #include <linux/hw_breakpoint.h>
 #endif
@@ -9,15 +9,20 @@
 class PerfEventBenchamrkWrapper {
 public:
     PerfEventBenchamrkWrapper(benchmark::State& state) {
+#ifdef __linux__
         test_if_support_perf_event();
 
         if (!perf_event_supported)  return;
         state_ = &state;
         e_ = new PerfEvent();
         e_->startCounters();
+#else
+        (void)state; // unused
+#endif
     }
 
     ~PerfEventBenchamrkWrapper() {
+#ifdef __linux__
         if (!perf_event_supported) return;
 
         auto &e = *e_;
@@ -35,6 +40,7 @@ public:
         state.counters["GHz"] = e.getCounter("cycles") / e.getCounter("task-clock");
 
         delete e_;
+#endif
     }
 
     void test_if_support_perf_event() {
@@ -66,8 +72,11 @@ public:
 #endif
     }
 
-    PerfEvent *e_;
-    bool perf_event_supported = false;
+    bool perf_event_supported = false;    
+
+#ifdef __linux__
 private:
+    PerfEvent *e_;
     benchmark::State *state_;
+#endif
 };

@@ -1,12 +1,13 @@
 #include <benchmark/benchmark.h>
 
 #include "ssfehash/ssfe.h"
-#include "sepset.h"
 #include "othello_wrapper.h"
 #include "dev_utils/dev_utils.h"
-#include "dev_utils/perf_event_helper.h" 
+#include "dev_utils/perf_event_helper.h"
 
-#include "PerfEvent.hpp"
+#ifdef __linux__
+#include "sepset.h"
+#endif
 
 
 static void BM_stdmap_query(benchmark::State& state) {
@@ -119,10 +120,12 @@ BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_query, SSFE<uint64_t>)(benchm
 BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000)->Arg(40 * 1000 * 1000)->Arg(80 * 1000 * 1000);
 
 // sepset query
+#ifdef __linux__
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_query, SepSet<uint64_t>)(benchmark::State& state) {
     benchmark_query<SepSet<uint64_t>>(ssfe, state);
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000)->Arg(10 * 1000 * 1000);
+#endif
 
 // othello query
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, othello_query, OthelloWrapper<uint64_t>)(benchmark::State& state) {
@@ -137,10 +140,12 @@ BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_query_batch, SSFE<uint64_t>)(
 BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query_batch)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000)->Arg(10 * 1000 * 1000);
 
 // sepset query batch
+#ifdef __linux__
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_query_batch, SepSet<uint64_t>)(benchmark::State& state) {
     benchmark_query_batch<SepSet<uint64_t>>(ssfe, state);
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query_batch)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000)->Arg(10 * 1000 * 1000);
+#endif
 
 // ssfe update
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_update, SSFE<uint64_t>)(benchmark::State& state) {
@@ -149,11 +154,13 @@ BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_update, SSFE<uint64_t>)(bench
 BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_update)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 
 // sepset update
+#ifdef __linux__
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_update, SepSet<uint64_t>)(benchmark::State& state) {
     benchmark_update<SepSet<uint64_t>>(ssfe, state);
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
 BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*8)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*128)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*512)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*1024)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*4096);
+#endif
 
 // ssfe build
 BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE<uint64_t>)->Arg(10 * 1000)->Arg(100 * 1000)->Arg(1000 * 1000)->Arg(2 * 1000 * 1000);
