@@ -164,10 +164,15 @@ class SSFE_DONG {
         assert(data_ == nullptr);
         int avg_load = 256;
 
+        // init groups related stuffs, which is used to index the start postions of groups
         group_num_ = max_capacity / avg_load + 1;    
         groups_ = new uint8_t*[group_num_];
 
-        data_size_ = group_num_ * (avg_load*1.42/8 + 3);
+        // maintaince struct, which stores kv pairs
+        kv_groups_.resize(group_num_);
+
+        // init data related stuffs, which is used as "bit array"-s of groups
+        data_size_ = group_num_ * (avg_load*1.1/8 + 4);
         data_ = new uint8_t[data_size_];
 
         // print_space_utilization("SSFE_DONG", group_num_ + data_size_, max_capacity);
@@ -179,19 +184,19 @@ class SSFE_DONG {
             group_num_ = 0;
             delete[] data_;
             delete[] groups_;
+            kv_groups_.resize(0);
             data_ = nullptr;
             groups_ = nullptr;
         }
     }
 
     void build(const std::vector<std::pair<KEY_TYPE, bool>> &kvs) {
-        std::vector<std::pair<KEY_TYPE, bool>> groups[group_num_];
         for (const auto &kv : kvs) {
             int g = h_.hash1(kv.first) % group_num_;
-            groups[g].push_back(kv);
+            kv_groups_[g].push_back(kv);
         }
 
-        // One Group:
+        // The Group Format:
         // -------------------------------------------------------------
         // | len, 2 bytes | hash_index  1 bytes | data (len - 3) bytes |
         // -------------------------------------------------------------
@@ -201,17 +206,17 @@ class SSFE_DONG {
             // setup the group start address
             groups_[i] = p;
 
-            uint16_t len = 3 + (groups[i].size() * 1.2)/8 + 1; // 2 bytes for len, 1 bytes for hash index, (groups[i].size() * 1.4)/8 + 1 for x values
+            uint16_t len = 3 + (kv_groups_[i].size() * 1.1)/8 + 1; // 2 bytes for len, 1 bytes for hash index, (groups[i].size() * 1.4)/8 + 1 for x values
             assert(p + len <= data_ + data_size_);
             
             // copy len
             memcpy(p, &len, sizeof(uint16_t));
 
             // the build function setups the hash_index and data
-            int hash_index = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(groups[i], p + 2, len - 2);
+            int hash_index = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(kv_groups_[i], p + 2, len - 2);
             if (hash_index < 0) {
                 printf("i = %d\n", i);
-                printf("group size: %d\n", (int)groups[i].size());
+                printf("group size: %d\n", (int)kv_groups_[i].size());
                 assert(false);
             }
 
@@ -230,28 +235,27 @@ class SSFE_DONG {
 
     void query_batch(KEY_TYPE *keys, bool *res, int batch_size) {
         assert(batch_size <= 16);
-        int g[16];
+        uint8_t *g[16];
         for (int i = 0; i < batch_size; i++) {
-            g[i] = h_.hash1(keys[i]) % group_num_;
-            __builtin_prefetch(groups_ + g[i]);
+            g[i] = groups_[h_.hash1(keys[i]) % group_num_];
         }
 
         // prefetch data
         for (int i = 0; i < batch_size; i++) {
-            __builtin_prefetch(groups_[g[i]]);
+            __builtin_prefetch(g[i]);
         }
 
         // query
         for (int i = 0; i < batch_size; i++) {
-            uint8_t *group = groups_[g[i]];
             uint16_t len = 0;
-            memcpy(&len, group, sizeof(uint16_t));
-            res[i] = HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(keys[i], group + 2, len - 2);
+            memcpy(&len, g[i], sizeof(uint16_t));
+            res[i] = HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(keys[i], g[i] + 2, len - 2);
         }
     }
 
    private:
     MixFamily2<KEY_TYPE> h_;
+    std::vector<std::vector<std::pair<KEY_TYPE, bool>>> kv_groups_;
 
     size_t data_size_;
     uint8_t* data_ = nullptr;

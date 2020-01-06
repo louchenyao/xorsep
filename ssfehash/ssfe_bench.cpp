@@ -118,7 +118,7 @@ void benchmark_update(SSFE_T &ssfe, benchmark::State& state) {
 // ************
 
 // ssfe build
-BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE<uint64_t>)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000)->Arg(50 * 1000 * 1000)->Arg(100 * 1000 * 1000);
+BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE<uint64_t>)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000);
 
 // ssfe query
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_query, SSFE<uint64_t>)(benchmark::State& state) {
@@ -136,7 +136,7 @@ BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query_batch)->Arg(1000)->Arg(1000 * 
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_update, SSFE<uint64_t>)(benchmark::State& state) {
     benchmark_update<SSFE<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_update)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_update)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000);
 
 // ************
 // * Othello
@@ -157,21 +157,21 @@ BENCHMARK_REGISTER_F(SSFEBuildFixture, othello_query)->Arg(1000)->Arg(1000 * 100
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_query, SepSet<uint64_t>)(benchmark::State& state) {
     benchmark_query<SepSet<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000)->Arg(50 * 1000 * 1000);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000)->Arg(50 * 1000 * 1000)->Arg(100 * 1000 * 1000);
 
 
 // sepset query batch
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_query_batch, SepSet<uint64_t>)(benchmark::State& state) {
     benchmark_query_batch<SepSet<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query_batch)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000)->Arg(50 * 1000 * 1000);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query_batch)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000)->Arg(50 * 1000 * 1000)->Arg(100 * 1000 * 1000)->Arg(200 * 1000 * 1000);
 
 
 // sepset update
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_update, SepSet<uint64_t>)(benchmark::State& state) {
     benchmark_update<SepSet<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000)->Arg(50 * 1000 * 1000);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000);
 // Error: void SepSet<KEY_TYPE>::init(int) [with KEY_TYPE = long unsigned int]: Assertion `table_ != nullptr' failed.
 //BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*8)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*128)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*512)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*1024)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*4096);
 #endif
@@ -190,10 +190,10 @@ BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_dong_query)->Arg(1000)->Arg(1000 * 1
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_dong_query_batch, SSFE_DONG<uint64_t>)(benchmark::State& state) {
     benchmark_query_batch<SSFE_DONG<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_dong_query_batch)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_dong_query_batch)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000)->Arg(50 * 1000 * 1000)->Arg(100 * 1000 * 1000)->Arg(200 * 1000 * 1000);
 
 // ssfe_dong build
-BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE_DONG<uint64_t>)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000);
+BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE_DONG<uint64_t>)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000);
 
 // ************
 // * stdmap

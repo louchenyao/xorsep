@@ -29,7 +29,7 @@ jobs:
     - name: install packages for plot scripts
       run: |
         sudo apt-get install -y python3-pip
-        sudo pip3 install matplotlib numpy
+        sudo pip3 install matplotlib numpy pandas
     - name: build dpdk
       run: ./build_dpdk.sh
       working-directory: dpdk
