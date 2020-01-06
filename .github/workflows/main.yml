@@ -21,7 +21,7 @@ jobs:
       run: bazel run //:group_profile
 
   bench:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     
     steps:
     - uses: actions/checkout@v1
@@ -63,7 +63,7 @@ jobs:
     - name: install python libraries
       run: |
         sudo apt-get install python3-pip
-        sudo pip3 install matplotlib numpy
+        sudo pip3 install matplotlib numpy pandas
     - name: overhead experiment
       run: python3 scripts/overhead_experiment.py
     - name: collect figures
