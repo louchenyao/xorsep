@@ -124,13 +124,13 @@ BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE<uint64_t>)->Arg(1000)->Arg(1000 * 1000)->
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_query, SSFE<uint64_t>)(benchmark::State& state) {
     benchmark_query<SSFE<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000)->Arg(50 * 1000 * 1000)->Arg(100 * 1000 * 1000);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000)->Arg(50 * 1000 * 1000)->Arg(100 * 1000 * 1000)->Arg(200 * 1000 * 1000);
 
 // ssfe query batch
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_query_batch, SSFE<uint64_t>)(benchmark::State& state) {
     benchmark_query_batch<SSFE<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query_batch)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000)->Arg(50 * 1000 * 1000)->Arg(100 * 1000 * 1000);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query_batch)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000)->Arg(50 * 1000 * 1000)->Arg(100 * 1000 * 1000)->Arg(200 * 1000 * 1000);
 
 // ssfe update
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_update, SSFE<uint64_t>)(benchmark::State& state) {
@@ -146,7 +146,7 @@ BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_update)->Arg(1000)->Arg(1000 * 1000)
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, othello_query, OthelloWrapper<uint64_t>)(benchmark::State& state) {
     benchmark_query<OthelloWrapper<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, othello_query)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000)->Arg(50 * 1000 * 1000)->Arg(100 * 1000 * 1000);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, othello_query)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000)->Arg(20 * 1000 * 1000)->Arg(50 * 1000 * 1000)->Arg(100 * 1000 * 1000)->Arg(200 * 1000 * 1000);
 
 // ************
 // * SetSep
