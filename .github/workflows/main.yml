@@ -42,6 +42,7 @@ jobs:
         mkdir -p benchmark_results
         mv bench.csv benchmark_results
     - name: install packages for plot scripts
+      run: |
         sudo apt-get install python3-pip
         sudo pip3 install matplotlib numpy
     - name: plot
