@@ -164,7 +164,7 @@ class SSFE_DONG {
         assert(data_ == nullptr);
         int avg_load = 256;
 
-        group_num_ = max_capacity / avg_load;    
+        group_num_ = max_capacity / avg_load + 1;    
         groups_ = new uint8_t*[group_num_];
 
         data_size_ = group_num_ * (avg_load*1.42/8 + 3);
@@ -201,7 +201,7 @@ class SSFE_DONG {
             // setup the group start address
             groups_[i] = p;
 
-            uint16_t len = 3 + (groups[i].size() * 1.40)/8 + 1; // 2 bytes for len, 1 bytes for hash index, (groups[i].size() * 1.4)/8 + 1 for x values
+            uint16_t len = 3 + (groups[i].size() * 1.2)/8 + 1; // 2 bytes for len, 1 bytes for hash index, (groups[i].size() * 1.4)/8 + 1 for x values
             assert(p + len <= data_ + data_size_);
             
             // copy len
@@ -251,7 +251,7 @@ class SSFE_DONG {
     }
 
    private:
-    MixFamily<KEY_TYPE> h_;
+    MixFamily2<KEY_TYPE> h_;
 
     size_t data_size_;
     uint8_t* data_ = nullptr;
