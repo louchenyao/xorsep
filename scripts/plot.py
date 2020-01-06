@@ -9,6 +9,7 @@ import tempfile
 
 # parse the benchmark output and return the datafram
 def parse_bench_csv(csv_fn):
+    # skim off the debug information
     with open(csv_fn) as f:
         c = ""
         for l in f.readlines():
@@ -35,7 +36,7 @@ def plot_query(log):
 
     ssfe_query = extract_benchmark(log, "/ssfe_query/") 
     sepset_query = extract_benchmark(log, "/sepset_query/")
-    #othello_query = extract_benchmark(log, "/othello_query/")
+    othello_query = extract_benchmark(log, "/othello_query/")
 
     # plot
     matplotlib.rcParams.update({'font.size': 20}) 
@@ -44,12 +45,12 @@ def plot_query(log):
     ax.set_xlabel("# Keys")
     ax.set_ylabel("Query Time (ns)")
     ax.plot(ssfe_query['keys'], ssfe_query['cpu_time'], label='SSFE', marker='o', color='teal')
-    ax.plot(sepset_query['keys'], sepset_query['cpu_time'], label='SepSet', marker='s', color='orangered')
-    #ax.plot(othello_query['keys'], othello_query['cpu_time'], label='Othello', marker='h', color='navy')
+    ax.plot(sepset_query['keys'], sepset_query['cpu_time'], label='SetSep', marker='s', color='orangered')
+    ax.plot(othello_query['keys'], othello_query['cpu_time'], label='Othello', marker='h', color='navy')
     ax.legend(loc='best', ncol=1, shadow=True, fontsize=15)
 
     # save
-    fig.savefig("BM_query.pdf", bbox_inches='tight')
+    fig.savefig("query.pdf", bbox_inches='tight')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

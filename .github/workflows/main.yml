@@ -41,6 +41,14 @@ jobs:
         ./bazel-bin/bench --benchmark_out_format=csv --benchmark_out=bench.csv
         mkdir -p benchmark_results
         mv bench.csv benchmark_results
+    - name: install packages for plot scripts
+        sudo apt-get install python3-pip
+        sudo pip3 install matplotlib numpy
+    - name: plot
+      working-directory: benchmark_results
+      run: |
+        python3 ../scripts/plot.py --csv bench.csv
+      
     - uses: actions/upload-artifact@v1
       with:
         name: benchmark_results

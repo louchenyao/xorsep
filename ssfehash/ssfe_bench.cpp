@@ -172,7 +172,8 @@ BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_update, SepSet<uint64_t>)(b
     benchmark_update<SepSet<uint64_t>>(ssfe, state);
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000);
-BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*8)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*128)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*512)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*1024)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*4096);
+// Error: void SepSet<KEY_TYPE>::init(int) [with KEY_TYPE = long unsigned int]: Assertion `table_ != nullptr' failed.
+//BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*8)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*128)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*512)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*1024)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*4096);
 #endif
 
 // ************
