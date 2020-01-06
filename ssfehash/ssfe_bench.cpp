@@ -200,4 +200,4 @@ BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE_DONG<uint64_t>)->Arg(1000)->Arg(1000 * 10
 // ************
 
 // stdmap query
-BENCHMARK(BM_stdmap_query)->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000);
+BENCHMARK(BM_stdmap_query)->Arg(1000)->Arg(1000 * 1000);
