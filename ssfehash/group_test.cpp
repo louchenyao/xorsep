@@ -14,12 +14,12 @@ TEST(HashGroup, BitManipulation) {
 TEST(HashGroup, build_bitset_2_) {
     for (int round = 0; round < 2000; round++) {
         // prepare data
-        std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(220);
+        std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(220, false, round);
         int data_size = 256 / 8;
         uint8_t *data = new uint8_t[data_size];
         int hash_index = 0;
         for (; hash_index < 256; hash_index++) {
-            if (HashGroup::build_naive_<uint64_t, MixFamily<uint64_t>>(kvs, data + 1, data_size - 1, hash_index)) {
+            if (HashGroup::build_naive_<uint64_t, MixFamily2<uint64_t>>(kvs, data + 1, data_size - 1, hash_index)) {
                 break;
             }
         }
@@ -27,13 +27,13 @@ TEST(HashGroup, build_bitset_2_) {
         memset(data, 0, data_size);
 
         // build
-        bool succ = HashGroup::build_bitset_2_<uint64_t, MixFamily<uint64_t>>(kvs, data + 1, data_size - 1, hash_index);
+        bool succ = HashGroup::build_bitset_2_<uint64_t, MixFamily2<uint64_t>>(kvs, data + 1, data_size - 1, hash_index);
         EXPECT_EQ(succ, true);
 
         // verify
         data[0] = uint8_t(hash_index);
         for (auto &kv : kvs) {
-            bool r = HashGroup::query<uint64_t, MixFamily<uint64_t>>(kv.first, data, data_size);
+            bool r = HashGroup::query<uint64_t, MixFamily2<uint64_t>>(kv.first, data, data_size);
             EXPECT_EQ(kv.second, r);
         }
 
@@ -49,7 +49,7 @@ void group_test(std::string name, bool verify=true, bool store_index_into_group_
 
     for (int round = 0; round < tot_rounds; round++) {
         // construct key-value pairs
-        std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(220);
+        std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(220, false, round);
 
         // build the hash group
         uint8_t *data = new uint8_t[256 / 8];
