@@ -50,7 +50,7 @@ class MixFamily2_256 {
 
     // the size of each hash value is 8 bits 
     std::tuple<uint8_t, uint8_t, uint8_t> hash3(KEY_TYPE key, int hash_index) {
-        uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][0]);
+        uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), hash_index);
         return std::make_tuple<uint8_t, uint8_t, uint8_t>(h & 0xff, (h >> 8) & 0xff, (h >> 16) & 0xff);
     }
 
@@ -74,7 +74,7 @@ class MixFamily2 {
     }
 
     std::tuple<uint32_t, uint32_t, uint32_t> hash3(KEY_TYPE key, int hash_index) {
-        uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), SEEDS[hash_index][0]);
+        uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), hash_index);
         const uint32_t mask = (1<<10) - 1;
         return std::make_tuple<uint32_t, uint32_t, uint32_t>(h & mask, (h >> 10) & mask, (h >> 20) & mask);
     }
