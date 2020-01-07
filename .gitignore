@@ -2,3 +2,5 @@
 bazel-*
 *.png
 .DS_Store
+*.pdf
+bench.csv
