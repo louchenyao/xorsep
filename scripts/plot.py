@@ -77,7 +77,7 @@ def plot_gaussian_elimination(df):
     ax.set_xticks(y_pos)
     ax.set_xticklabels(['naive', 'bitset', 'bitset+col'])
     ax.set_ylabel('keys/sec')
-    ax.set_title('Gauss Elimination Performance\ncols/keys=182, rows=256\n')
+    ax.set_title('Gauss Elimination Performance\nrows/keys=182, cols=256\n')
     ax.grid(True, axis='y')
 
     # save
