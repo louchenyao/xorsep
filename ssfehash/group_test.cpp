@@ -84,17 +84,14 @@ void group_test(std::string name, bool verify=true, bool store_index_into_group_
 
 TEST(HashGroup, Basic) {
     group_test<Murmur3Family<uint64_t>>("Murmur3Family", true, true);
-    group_test<MixFamily<uint64_t>>("MixFamily", true, true);
     group_test<CRC32Family<uint64_t>>("CRC32Family", true, true);
     group_test<FakeRandomFamily<uint64_t>>("FakeRandomFamily", false, true);
 
     group_test<Murmur3Family<uint64_t>>("Murmur3Family", true, false);
-    group_test<MixFamily<uint64_t>>("MixFamily", true, false);
     group_test<MixFamily2_256<uint64_t>>("MixFamily2_256", true, false);
     group_test<FakeRandomFamily<uint64_t>>("FakeRandomFamily", false, false);
 
     // CRC32 does not work when the group size is exactly 256, due to its special property
     // It does work when store_index_into_group_memory=true because the group size is actully 256 - 8 bits
     // group_test<CRC32Family<uint64_t>>("CRC32Family", true, false);
-    // group_test<MixFamily256<uint64_t>>("MixFamily256", true, false);
 }

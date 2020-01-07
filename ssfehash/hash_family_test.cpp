@@ -25,14 +25,10 @@ void test_hash_family() {
 TEST(HashFamilies, Basic) {
     // TODO: Fix the error when the key type is long double
     test_hash_family<Murmur3Family<uint64_t> >();
-    //test_hash_family<MixFamily<long double> >();
-    test_hash_family<MixFamily<uint64_t> >();
     // test_hash_family<CRC32Family<long double> >();
     test_hash_family<CRC32Family<uint64_t> >();
     // test_hash_family<XXH32Family<long double> >();
     test_hash_family<XXH32Family<uint64_t> >();
-    // test_hash_family<MixFamily256<long double> >();
-    test_hash_family<MixFamily256<uint64_t> >();
 
     test_hash_family<MixFamily2_256<uint64_t> >();
 }

@@ -41,58 +41,6 @@ class CRC32Family {
 };
 
 template <typename KEY_TYPE>
-class MixFamily {
-   public:
-    MixFamily() {
-        // require the size of KEY_TYPE is the times of 64 bits
-        assert(sizeof(KEY_TYPE) % 8 == 0);
-    }
-
-    std::tuple<uint32_t, uint32_t, uint32_t> hash3(KEY_TYPE key, int hash_index) {
-        uint64_t h1 = SEEDS[hash_index][0], h2 = SEEDS[hash_index][1],
-                 h3 = SEEDS[hash_index][2];
-        uint64_t *t = (uint64_t *)&key;
-        for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
-            h1 ^= t[i];
-            h2 = _mm_crc32_u64(h2, t[i]*3);
-            h3 = _mm_crc32_u64(h3, t[i]);
-            h3 += __builtin_popcount(h3);
-        }
-        return std::make_tuple<uint32_t, uint32_t, uint32_t>(h1, h2, h3);
-    }
-
-    uint32_t hash1(KEY_TYPE key) {
-        //std::cout << "hahs1, key = " << key << std::endl;
-        uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), 1445563897);
-        return h;
-    }
-};
-
-template <typename KEY_TYPE>
-class MixFamily256 {
-   public:
-    MixFamily256() {
-        // require the size of KEY_TYPE is the times of 64 bits
-        assert(sizeof(KEY_TYPE) % 8 == 0);
-    }
-
-    // the size of each hash value is 8 bits 
-    std::tuple<uint8_t, uint8_t, uint8_t> hash3(KEY_TYPE key, int hash_index) {
-        uint64_t h = SEEDS[hash_index][0];
-        uint64_t *t = (uint64_t *)&key;
-        for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
-            h = _mm_crc32_u64(h, t[i]);
-        }
-        return std::make_tuple<uint8_t, uint8_t, uint8_t>(h & 0xff, (h >> 8) & 0xff, (h >> 16) & 0xff);
-    }
-
-    uint32_t hash1(KEY_TYPE key) {
-        uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), 1445563897);
-        return h;
-    }
-};
-
-template <typename KEY_TYPE>
 class MixFamily2_256 {
    public:
     MixFamily2_256() {

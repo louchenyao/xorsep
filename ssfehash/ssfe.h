@@ -148,6 +148,7 @@ class SSFE {
 
 template <typename KEY_TYPE>
 class SSFE_DONG {
+    typedef MixFamily2<KEY_TYPE> HASH;
    public:
     SSFE_DONG() = default;
     SSFE_DONG(int max_capacity) {
@@ -213,7 +214,7 @@ class SSFE_DONG {
             memcpy(p, &len, sizeof(uint16_t));
 
             // the build function setups the hash_index and data
-            int hash_index = HashGroup::build<KEY_TYPE, MixFamily<KEY_TYPE> >(kv_groups_[i], p + 2, len - 2);
+            int hash_index = HashGroup::build<KEY_TYPE, HASH>(kv_groups_[i], p + 2, len - 2);
             if (hash_index < 0) {
                 printf("i = %d\n", i);
                 printf("group size: %d\n", (int)kv_groups_[i].size());
@@ -230,7 +231,7 @@ class SSFE_DONG {
 
         uint16_t len = 0;
         memcpy(&len, group, sizeof(uint16_t));
-        return HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(key, group + 2, len - 2);
+        return HashGroup::query<KEY_TYPE, HASH>(key, group + 2, len - 2);
     }
 
     void query_batch(KEY_TYPE *keys, bool *res, int batch_size) {
@@ -249,12 +250,12 @@ class SSFE_DONG {
         for (int i = 0; i < batch_size; i++) {
             uint16_t len = 0;
             memcpy(&len, g[i], sizeof(uint16_t));
-            res[i] = HashGroup::query<KEY_TYPE, MixFamily<KEY_TYPE> >(keys[i], g[i] + 2, len - 2);
+            res[i] = HashGroup::query<KEY_TYPE, HASH>(keys[i], g[i] + 2, len - 2);
         }
     }
 
    private:
-    MixFamily2<KEY_TYPE> h_;
+    HASH h_;
     std::vector<std::vector<std::pair<KEY_TYPE, bool>>> kv_groups_;
 
     size_t data_size_;
