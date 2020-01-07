@@ -9,7 +9,8 @@ static void BM_hash3(benchmark::State& state) {
     for (int i = 0; i < HASH_FAMILY_NUM; i++) {
         families.push_back(i);
     }
-    shuffle_vector<int>(families);
+    std::mt19937 g(7);
+    std::shuffle(families.begin(), families.end(), g);
 
     auto h = HASH();
     int i = 0;

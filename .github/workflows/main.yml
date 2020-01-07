@@ -21,7 +21,7 @@ jobs:
       run: bazel run //:group_profile
 
   bench:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v1
