@@ -56,9 +56,9 @@ void group_test(std::string name, bool verify=true, bool store_index_into_group_
         int family_index = HashGroup::build<uint64_t, HASH_FAMILY >(kvs, data, 256 / 8, store_index_into_group_memory);
         assert(family_index >= 0);
         
-        if (round < 30) {
+        if (round < 10) {
             printf("%d, ", family_index + 1);
-        } else if (round == 30) {
+        } else if (round == 10) {
             printf("...");
         }
         
@@ -86,6 +86,7 @@ TEST(HashGroup, Basic) {
     group_test<Murmur3Family<uint64_t>>("Murmur3Family", true, true);
     group_test<CRC32Family<uint64_t>>("CRC32Family", true, true);
     group_test<FakeRandomFamily<uint64_t>>("FakeRandomFamily", false, true);
+    group_test<MixFamily2_256<uint64_t>>("MixFamily2", true, true);
 
     group_test<Murmur3Family<uint64_t>>("Murmur3Family", true, false);
     group_test<MixFamily2_256<uint64_t>>("MixFamily2_256", true, false);
