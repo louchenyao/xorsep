@@ -35,7 +35,13 @@ class SSFE {
         }
         group_num_bitmask_ = group_num_ - 1;
 
+        // the maintaince structure
         groups_.resize(group_num_);
+        // reserve spaces to avoid frequent allocations
+        for (auto &g: groups_) {
+            g.reserve(256);
+        }
+
         hash_index_ = new uint8_t[group_num_];
         assert(hash_index_ != nullptr);
 
@@ -169,8 +175,11 @@ class SSFE_DONG {
         group_num_ = max_capacity / avg_load + 1;    
         groups_ = new uint8_t*[group_num_];
 
-        // maintaince struct, which stores kv pairs
+        // the maintaince struct, which stores kv pairs
         kv_groups_.resize(group_num_);
+        for (auto &g: kv_groups_) {
+            g.reserve(256);
+        }
 
         // init data related stuffs, which is used as "bit array"-s of groups
         data_size_ = group_num_ * (avg_load*1.1/8 + 4);
