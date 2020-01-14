@@ -228,25 +228,45 @@ BENCHMARK_REGISTER_F(SSFEBuildFixture, othello_query)->Apply(othello_args);
 
 // sepset query
 #ifdef __linux__
-static void setsep_query_args(benchmark::internal::Benchmark *b) {
-    // if the machine has enough memory, then run with 50m keys, otherwise 10m keys
+
+static int sepset_round_capacity(int cap) {
+    // the following round rules are from rte_efd.c:529
+    // num_chunks = rte_align32pow2(max_num_rules/EFD_TARGET_CHUNK_NUM_RULES);
+
+    int EFD_TARGET_CHUNK_NUM_RULES  = (EFD_TARGET_GROUP_NUM_RULES * 64);
+    int c = EFD_TARGET_CHUNK_NUM_RULES;
+    while (c < cap) c *= 2;
+
+    int num_chunks = c/EFD_TARGET_CHUNK_NUM_RULES;
+    // check num_chunks is the power of 2
+    assert((num_chunks & (num_chunks - 1))==0);
+    return c;
+}
+static void setsep_args(benchmark::internal::Benchmark *b) {
+    std::vector<int> small_args = {1000, 1000*1000, 10*1000*1000, 20*1000*1000};
+    std::vector<int> big_args = {40*1000*1000, 80*1000*1000, 160*1000*1000};
+
+    for (auto c: small_args) {
+        b->Arg(sepset_round_capacity(c));
+    }
+
     if (enough_memory()) {
-        b->Apply(args_50m);
-    } else {
-        b->Apply(args_10m);
+        for (auto c: big_args) {
+            b->Arg(sepset_round_capacity(c));
+        }
     }
 }
 
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_query, SepSet<uint64_t>)(benchmark::State& state) {
     benchmark_query<SepSet<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query)->Apply(setsep_query_args);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query)->Apply(setsep_args);
 
 // sepset query batch
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_query_batch, SepSet<uint64_t>)(benchmark::State& state) {
     benchmark_query_batch<SepSet<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query_batch)->Apply(setsep_query_args);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query_batch)->Apply(setsep_args);
 
 // sepset update
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_update, SepSet<uint64_t>)(benchmark::State& state) {
