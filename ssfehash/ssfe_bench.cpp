@@ -244,7 +244,7 @@ static int sepset_round_capacity(int cap) {
 }
 static void setsep_args(benchmark::internal::Benchmark *b) {
     std::vector<int> small_args = {1000, 1000*1000, 10*1000*1000, 20*1000*1000};
-    std::vector<int> big_args = {40*1000*1000, 80*1000*1000, 160*1000*1000};
+    std::vector<int> big_args = {40*1000*1000, 80*1000*1000};
 
     for (auto c: small_args) {
         b->Arg(sepset_round_capacity(c));
@@ -273,7 +273,6 @@ BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_update, SepSet<uint64_t>)(b
     benchmark_update<SepSet<uint64_t>>(ssfe, state);
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Apply(args_10m);
-//BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*8)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*128)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*512)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*1024)->Arg(EFD_TARGET_GROUP_NUM_RULES*64*4096);
 #endif
 
 // ************
