@@ -127,6 +127,14 @@ static void args_50m(benchmark::internal::Benchmark* b) {
     b->Apply(args_10m)->Arg(20 * 1000 * 1000)->Arg(50 * 1000 * 1000);
 }
 
+static void args_200m(benchmark::internal::Benchmark* b) {
+    bool enough_memory = std::getenv("ENOUGH_MEMORY") != nullptr && std::string(std::getenv("ENOUGH_MEMORY")) == "1";
+    b->Apply(args_50m);
+    if (enough_memory) {
+        b->Arg(100 * 1000 * 1000)->Arg(200 * 1000 * 1000);
+    }
+}
+
 // ************
 // * SSFE
 // ************
@@ -138,13 +146,13 @@ BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE<uint64_t>)->Apply(args_10m);
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_query, SSFE<uint64_t>)(benchmark::State& state) {
     benchmark_query<SSFE<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query)->Apply(args_50m);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query)->Apply(args_200m);
 
 // ssfe query batch
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_query_batch, SSFE<uint64_t>)(benchmark::State& state) {
     benchmark_query_batch<SSFE<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query_batch)->Apply(args_50m);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query_batch)->Apply(args_200m);
 
 // ssfe update
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_update, SSFE<uint64_t>)(benchmark::State& state) {
@@ -160,7 +168,7 @@ BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_update)->Apply(args_10m);
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, othello_query, OthelloWrapper<uint64_t>)(benchmark::State& state) {
     benchmark_query<OthelloWrapper<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, othello_query)->Apply(args_50m);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, othello_query)->Apply(args_200m);
 
 // ************
 // * SetSep
@@ -211,7 +219,7 @@ BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_dong_query)->Apply(args_50m);
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_dong_query_batch, SSFE_DONG<uint64_t>)(benchmark::State& state) {
     benchmark_query_batch<SSFE_DONG<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_dong_query_batch)->Apply(args_50m);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_dong_query_batch)->Apply(args_200m);
 
 // ssfe_dong build
 BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE_DONG<uint64_t>)->Apply(args_10m);
