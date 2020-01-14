@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "ssfehash/prefetch.h"
 #include "ssfehash/group.h"
 
 // static void print_space_utilization(const char *algo, int bytes, int max_capacity) {
@@ -125,7 +126,7 @@ class SSFE {
     bool query(KEY_TYPE key) {
         int g = h_.hash1(key) & group_num_bitmask_;
         int offset = g*(SSFE_GROUP_BITS/8);
-        __builtin_prefetch(data_ + offset);
+        prefetch0(data_ + offset);
         return HashGroup::query_group_size_256<KEY_TYPE, HASH>(key, data_ +offset, hash_index_[g]);
     }
 
@@ -134,7 +135,7 @@ class SSFE {
         int g[16];
         for (int i = 0; i < batch_size; i++) {
             g[i] = h_.hash1(keys[i]) & group_num_bitmask_;
-            __builtin_prefetch(data_ + g[i]*(SSFE_GROUP_BITS/8));
+            prefetch0(data_ + g[i]*(SSFE_GROUP_BITS/8));
         }
         for (int i = 0; i < batch_size; i++) {
             res[i] = HashGroup::query_group_size_256<KEY_TYPE, HASH>(keys[i], data_ + g[i]*(SSFE_GROUP_BITS/8), hash_index_[g[i]]);
@@ -252,7 +253,7 @@ class SSFE_DONG {
 
         // prefetch data
         for (int i = 0; i < batch_size; i++) {
-            __builtin_prefetch(g[i]);
+            prefetch0(g[i]);
         }
 
         // query
