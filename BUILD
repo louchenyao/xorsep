@@ -59,8 +59,8 @@ cc_test(
 )
 
 cc_binary(
-    name = "group_profile",
-    srcs = glob(["ssfehash/group_profile.cpp"]),
+    name = "group_exp_cancles",
+    srcs = glob(["ssfehash/group_exp_cancles.cpp"]),
     copts = ["-std=c++17", "-O3", "-march=native", "-Wall", "-Wextra", "-Werror", "-Wno-error=strict-overflow"],
     deps = [
         "//:ssfehash",

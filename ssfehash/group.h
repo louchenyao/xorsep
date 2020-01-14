@@ -100,8 +100,8 @@ bool build_naive_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
 
 // This function outputs debug informations for profiling.
 template <typename KEY_TYPE, class HASH_FAMILY>
-bool build_profile_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
-                 uint8_t *data, size_t data_size, int hash_family) {
+bool build_expermients_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
+                 uint8_t *data, size_t data_size, int hash_family, int &tot_cancles) {
     int n = kvs.size();
     int m = data_size * 8;
     HASH_FAMILY h;
@@ -119,8 +119,8 @@ bool build_profile_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
 
     // profiling counters
     assert(m == 256);
-    int tot_swap = 0;
-    int swap_for_jth_column = 0;
+    tot_cancles = 0;
+    int cancles_for_jth_column = 0;
 
     // do gauess elimnation
     int j = 0;                     // the column with first non-zero entry
@@ -147,21 +147,18 @@ bool build_profile_(const std::vector<std::pair<KEY_TYPE, bool> > &kvs,
         if (!found) return false;
 
         // elimnate other rows which j-th column elements are true
-        swap_for_jth_column = 0;
+        cancles_for_jth_column = 0;
         for (int k = row + 1; k < n; k++) {  // elimnate k-th row
             if (a[k][j]) {
-                swap_for_jth_column += 1;
-                //printf("j = %d, swap row %d with row %d", j, i, k);
+                cancles_for_jth_column += 1;
                 // set l < m + 1 to xor the answer
                 for (int l = j; l < m + 1; l++) {
                     a[k][l] ^= a[i][l];
                 }
             }
         }
-        tot_swap += swap_for_jth_column;
-        //printf("swap %d times for j = %d\n", swap_for_jth_column, j);
+        tot_cancles += cancles_for_jth_column;
     }
-    printf("swap %d times in total\n", tot_swap);
 
     // calculate result
     memset(data, 0, data_size);

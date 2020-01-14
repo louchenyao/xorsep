@@ -17,8 +17,8 @@ jobs:
         sudo ./bazel-0.29.1-installer-linux-x86_64.sh
     - name: test
       run: bazel run //:test
-    - name: profile
-      run: bazel run //:group_profile
+    - name:
+      run: bazel run //:group_exp_cancles
 
   bench:
     runs-on: ubuntu-latest
