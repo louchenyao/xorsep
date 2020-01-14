@@ -119,6 +119,10 @@ void benchmark_update(SSFE_T &ssfe, benchmark::State& state) {
 // * Aarguments
 // ************
 
+static bool enough_memory() {
+    return std::getenv("ENOUGH_MEMORY") != nullptr && std::string(std::getenv("ENOUGH_MEMORY")) == "1";
+}
+
 static void args_10m(benchmark::internal::Benchmark* b) {
     b->Arg(1000)->Arg(1000 * 1000)->Arg(10 * 1000 * 1000);
 }
@@ -126,11 +130,9 @@ static void args_10m(benchmark::internal::Benchmark* b) {
 static void args_50m(benchmark::internal::Benchmark* b) {
     b->Apply(args_10m)->Arg(20 * 1000 * 1000)->Arg(50 * 1000 * 1000);
 }
-
 static void args_200m(benchmark::internal::Benchmark* b) {
-    bool enough_memory = std::getenv("ENOUGH_MEMORY") != nullptr && std::string(std::getenv("ENOUGH_MEMORY")) == "1";
     b->Apply(args_50m);
-    if (enough_memory) {
+    if (enough_memory()) {
         b->Arg(100 * 1000 * 1000)->Arg(200 * 1000 * 1000);
     }
 }
@@ -139,6 +141,26 @@ static void args_200m(benchmark::internal::Benchmark* b) {
 // * SSFE
 // ************
 
+static int ssfe_round_capacity(int cap) {
+    int group_num = 0;
+    return SSFE<uint64_t>::round_capacity(cap, group_num);
+}
+
+static void ssfe_args(benchmark::internal::Benchmark* b) {
+    std::vector<int> small_args = {1000, 1000*1000, 10*1000*1000, 20*1000*1000, 40*1000*1000};
+    std::vector<int> big_args = {80*1000*1000, 160*1000*1000};
+    
+    for (auto c: small_args) {
+        b->Arg(ssfe_round_capacity(c));
+    }
+
+    if (enough_memory()) {
+        for (auto c: big_args) {
+            b->Arg(ssfe_round_capacity(c));
+        }
+    }
+}
+
 // ssfe build
 BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE<uint64_t>)->Apply(args_10m);
 
@@ -146,13 +168,13 @@ BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE<uint64_t>)->Apply(args_10m);
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_query, SSFE<uint64_t>)(benchmark::State& state) {
     benchmark_query<SSFE<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query)->Apply(args_200m);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query)->Apply(ssfe_args);
 
 // ssfe query batch
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_query_batch, SSFE<uint64_t>)(benchmark::State& state) {
     benchmark_query_batch<SSFE<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query_batch)->Apply(args_200m);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query_batch)->Apply(ssfe_args);
 
 // ssfe update
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_update, SSFE<uint64_t>)(benchmark::State& state) {
@@ -177,9 +199,8 @@ BENCHMARK_REGISTER_F(SSFEBuildFixture, othello_query)->Apply(args_200m);
 // sepset query
 #ifdef __linux__
 static void setsep_query_args(benchmark::internal::Benchmark *b) {
-    bool enough_memory = std::getenv("ENOUGH_MEMORY") != nullptr && std::string(std::getenv("ENOUGH_MEMORY")) == "1";
     // if the machine has enough memory, then run with 50m keys, otherwise 10m keys
-    if (enough_memory) {
+    if (enough_memory()) {
         b->Apply(args_50m);
     } else {
         b->Apply(args_10m);

@@ -10,6 +10,7 @@
 // }
 
 const int SSFE_GROUP_BITS = 256;
+const double SSFE_LOAD_FACTOR = 1.41;
 
 template <typename KEY_TYPE>
 class SSFE {
@@ -24,16 +25,21 @@ class SSFE {
         delete[] hash_index_;
     }
 
+    static int round_capacity(int cap, int &group_num) {
+        group_num = 1;
+        while (group_num*SSFE_GROUP_BITS/SSFE_LOAD_FACTOR < cap) {
+            group_num *= 2;
+        }
+
+        cap = group_num*SSFE_GROUP_BITS/SSFE_LOAD_FACTOR;
+        assert(!(group_num*SSFE_GROUP_BITS/SSFE_LOAD_FACTOR < cap));
+        return cap;
+    }
+
     void init(int max_capacity) {
         assert(data_ == nullptr);
 
-        max_capacity_ = max_capacity;
-        for (int i = 1; ; i *= 2) {
-            if (double(i*SSFE_GROUP_BITS)/max_capacity >= 1.41) {
-                group_num_ = i;
-                break;
-            }
-        }
+        max_capacity_ = round_capacity(max_capacity, group_num_);
         group_num_bitmask_ = group_num_ - 1;
 
         // the maintaince structure
