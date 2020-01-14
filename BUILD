@@ -13,7 +13,7 @@ cc_binary(
         "@bazel_tools//src/conditions:linux_x86_64": SEPSET_LINKOPTS,
         "//conditions:default": [],
     }),
-    defines = ["NO_OUTPUT", "DO_NOT_PRINT_SPACE"], # for annoying othello
+    defines = ["NO_OUTPUT"], # for annoying othello
     deps = [
         "@benchmark//:benchmark", 
         "@benchmark//:benchmark_main",

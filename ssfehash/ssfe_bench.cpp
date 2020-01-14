@@ -186,11 +186,41 @@ BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_update)->Apply(args_10m);
 // * Othello
 // ************
 
+static int othello_round_capacity(int cap) {
+    // the following round rules are from othello.h:157
+    //int hl1 = 8; //start from ma=64
+    //int hl2 = 7; //start from mb=64
+    //while ((1UL<<hl2) < keycount * 1) hl2++;
+    //while ((1UL<<hl1) < keycount * 1.333334) hl1++;
+
+    // when `keycount * 1.333334` is the power of 2, it has the best utilization rate
+    int hl1 = 8;
+    while ((1<<hl1) < cap*1.333334) hl1++;
+    cap = (1<<hl1)/1.333334;
+    assert(!((1<<hl1) < cap*1.333334));
+    return cap;
+}
+
+static void othello_args(benchmark::internal::Benchmark* b) {
+    std::vector<int> small_args = {1000, 1000*1000, 10*1000*1000, 20*1000*1000, 40*1000*1000};
+    std::vector<int> big_args = {80*1000*1000, 160*1000*1000};
+    
+    for (auto c: small_args) {
+        b->Arg(othello_round_capacity(c));
+    }
+
+    if (enough_memory()) {
+        for (auto c: big_args) {
+            b->Arg(othello_round_capacity(c));
+        }
+    }
+}
+
 // othello query
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, othello_query, OthelloWrapper<uint64_t>)(benchmark::State& state) {
     benchmark_query<OthelloWrapper<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, othello_query)->Apply(args_200m);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, othello_query)->Apply(othello_args);
 
 // ************
 // * SetSep
