@@ -132,8 +132,10 @@ class SSFE {
     bool query(KEY_TYPE key) {
         int g = h_.hash1(key) & group_num_bitmask_;
         int offset = g*(SSFE_GROUP_BITS/8);
+        uint8_t *d = data_ + offset; 
+        prefetch0(hash_index_ + g);
         prefetch0(data_ + offset);
-        return HashGroup::query_group_size_256<KEY_TYPE, HASH>(key, data_ +offset, hash_index_[g]);
+        return HashGroup::query_group_size_256<KEY_TYPE, HASH>(key, d, hash_index_[g]);
     }
 
     void query_batch(KEY_TYPE *keys, bool *res, int batch_size) {
