@@ -138,13 +138,27 @@ class SSFE {
 
     void query_batch(KEY_TYPE *keys, bool *res, int batch_size) {
         assert(batch_size <= 16);
-        int g[16];
+        int g[16]; // group ids
+        uint8_t hs[16][3];
+        // compute the group ids
         for (int i = 0; i < batch_size; i++) {
             g[i] = h_.hash1(keys[i]) & group_num_bitmask_;
+            // !!! imporant
+            prefetch0(hash_index_ + g[i]);
+        }
+        // compute the indexes for each gorup
+        for (int i = 0; i < batch_size; i++) {
+            auto [h1, h2, h3] = h_.hash3(keys[i], hash_index_[g[i]]);
+            hs[i][0] = h1 & 255;
+            hs[i][1] = h2 & 255;
+            hs[i][2] = h3 & 255;
+            // !!! imporant
             prefetch0(data_ + g[i]*(SSFE_GROUP_BITS/8));
         }
+        // compute the results
         for (int i = 0; i < batch_size; i++) {
-            res[i] = HashGroup::query_group_size_256<KEY_TYPE, HASH>(keys[i], data_ + g[i]*(SSFE_GROUP_BITS/8), hash_index_[g[i]]);
+            uint8_t *d = data_ + g[i]*(SSFE_GROUP_BITS/8);
+            res[i] = get_bit(d, hs[i][0]) ^ get_bit(d, hs[i][1]) ^ get_bit(d, hs[i][2]);
         }
     }
 
