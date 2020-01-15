@@ -40,22 +40,23 @@ class SSFEBuildFixture : public benchmark::Fixture {
             n = state.range(0);
             ssfe.clear();
             ssfe.init(state.range(0));
-            auto kvs = generate_keyvalues(state.range(0));
+            kvs = generate_keyvalues(state.range(0));
             ssfe.build(kvs);
         }
     }
     SSFE_T ssfe;
+    std::vector<std::pair<uint64_t, bool>> kvs;
     int n = 0;
 };
 
 template <typename SSFE_T>
-void benchmark_query(SSFE_T &ssfe, benchmark::State& state) {
+void benchmark_query(SSFE_T &ssfe, std::vector<std::pair<uint64_t, bool>> &kvs, benchmark::State& state) {
     // Benchmark
     int i = 0;
     {
         PerfEventBenchamrkWrapper e(state);
         for (auto _ : state) {
-            benchmark::DoNotOptimize(ssfe.query(i));
+            benchmark::DoNotOptimize(ssfe.query(kvs[i].first));
             i = i + 1;
             if (i == state.range(0)) {
                 i = 0;
@@ -65,21 +66,24 @@ void benchmark_query(SSFE_T &ssfe, benchmark::State& state) {
 }
 
 template <class SSFE_T>
-void benchmark_query_batch(SSFE_T &ssfe, benchmark::State& state) {
+void benchmark_query_batch(SSFE_T &ssfe, std::vector<std::pair<uint64_t, bool>> &kvs, benchmark::State& state) {
     // Benchmark
     int i = 0;
-    while (state.KeepRunningBatch(16)) {
-        uint64_t keys[16];
-        bool res[16];
-        for (int j = 0; j < 16; ++j) {
-            keys[j] = i;
-            i += 1;
+    {
+        PerfEventBenchamrkWrapper e(state);
+        while (state.KeepRunningBatch(16)) {
+            uint64_t keys[16];
+            bool res[16];
+            for (int j = 0; j < 16; ++j) {
+                keys[j] = kvs[i].first;
+                i += 1;
+            }
+            if (i + 16 >= state.range(0)) {
+                i = 0;
+            }
+            ssfe.query_batch(keys, res, 16);
+            benchmark::DoNotOptimize(res[0]);
         }
-        if (i + 16 >= state.range(0)) {
-            i = 0;
-        }
-        ssfe.query_batch(keys, res, 16);
-        benchmark::DoNotOptimize(res[0]);
     }
 }
 
@@ -166,13 +170,13 @@ BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE<uint64_t>)->Apply(args_10m);
 
 // ssfe query
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_query, SSFE<uint64_t>)(benchmark::State& state) {
-    benchmark_query<SSFE<uint64_t>>(ssfe, state);
+    benchmark_query<SSFE<uint64_t>>(ssfe, kvs, state);
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query)->Apply(ssfe_args);
 
 // ssfe query batch
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_query_batch, SSFE<uint64_t>)(benchmark::State& state) {
-    benchmark_query_batch<SSFE<uint64_t>>(ssfe, state);
+    benchmark_query_batch<SSFE<uint64_t>>(ssfe, kvs, state);
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query_batch)->Apply(ssfe_args);
 
@@ -218,7 +222,7 @@ static void othello_args(benchmark::internal::Benchmark* b) {
 
 // othello query
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, othello_query, OthelloWrapper<uint64_t>)(benchmark::State& state) {
-    benchmark_query<OthelloWrapper<uint64_t>>(ssfe, state);
+    benchmark_query<OthelloWrapper<uint64_t>>(ssfe, kvs, state);
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, othello_query)->Apply(othello_args);
 
@@ -258,13 +262,13 @@ static void setsep_args(benchmark::internal::Benchmark *b) {
 }
 
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_query, SepSet<uint64_t>)(benchmark::State& state) {
-    benchmark_query<SepSet<uint64_t>>(ssfe, state);
+    benchmark_query<SepSet<uint64_t>>(ssfe, kvs, state);
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query)->Apply(setsep_args);
 
 // sepset query batch
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_query_batch, SepSet<uint64_t>)(benchmark::State& state) {
-    benchmark_query_batch<SepSet<uint64_t>>(ssfe, state);
+    benchmark_query_batch<SepSet<uint64_t>>(ssfe, kvs, state);
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query_batch)->Apply(setsep_args);
 
@@ -281,13 +285,13 @@ BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Apply(args_10m);
 
 // ssfe_dong query
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_dong_query, SSFE_DONG<uint64_t>)(benchmark::State& state) {
-    benchmark_query<SSFE_DONG<uint64_t>>(ssfe, state);
+    benchmark_query<SSFE_DONG<uint64_t>>(ssfe, kvs, state);
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_dong_query)->Apply(args_50m);
 
 // ssfe_dong query batch
 BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_dong_query_batch, SSFE_DONG<uint64_t>)(benchmark::State& state) {
-    benchmark_query_batch<SSFE_DONG<uint64_t>>(ssfe, state);
+    benchmark_query_batch<SSFE_DONG<uint64_t>>(ssfe, kvs, state);
 }
 BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_dong_query_batch)->Apply(args_200m);
 
