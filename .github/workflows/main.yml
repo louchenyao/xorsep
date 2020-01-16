@@ -54,24 +54,3 @@ jobs:
       with:
         name: benchmark_results
         path: benchmark_results
-
-  experiment:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v1
-    - name: install python libraries
-      run: |
-        sudo apt-get install python3-pip
-        sudo pip3 install matplotlib numpy pandas
-    - name: overhead experiment
-      run: python3 scripts/overhead_experiment.py
-    - name: collect figures
-      run: |
-        mkdir figures
-        mv *.png figures
-    - uses: actions/upload-artifact@master
-      with:
-        name: load_distributions
-        path: figures
-      
