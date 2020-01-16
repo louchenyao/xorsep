@@ -10,7 +10,6 @@
 // }
 
 const int SSFE_GROUP_BITS = 256;
-const double SSFE_LOAD_FACTOR = 1.41;
 
 template <typename KEY_TYPE>
 class SSFE {
@@ -22,7 +21,7 @@ class SSFE {
     }
     ~SSFE() {
         delete[] data_;
-        delete[] hash_index_;
+        delete[] seed_;
     }
 
     // n is #bins (groups), m is #balls (keys)
@@ -67,8 +66,8 @@ class SSFE {
             g.reserve(256);
         }
 
-        hash_index_ = new uint8_t[group_num_];
-        assert(hash_index_ != nullptr);
+        seed_ = new uint8_t[group_num_];
+        assert(seed_ != nullptr);
 
         int data_size = group_num_ * (SSFE_GROUP_BITS/8);
         data_ = new uint8_t[data_size];
@@ -90,9 +89,9 @@ class SSFE {
             group_num_bitmask_ = 0;
             groups_.resize(0);
             delete[] data_;
-            delete[] hash_index_;
+            delete[] seed_;
             data_ = nullptr;
-            hash_index_ = nullptr;
+            seed_ = nullptr;
         }
     }
 
@@ -105,9 +104,9 @@ class SSFE {
         }
 
         for (int i = 0; i < group_num_; i++) {
-            int index = HashGroup::build<KEY_TYPE, HASH>(groups_[i], data_ + i*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS / 8, false);
-            hash_index_[i] = index;
-            if (index < 0) {
+            int seed = HashGroup::build<KEY_TYPE, HASH>(groups_[i], data_ + i*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS / 8, false);
+            seed_[i] = seed;
+            if (seed < 0) {
                 printf("i = %d\n", i);
                 printf("group size: %d\n", (int)groups_[i].size());
                 fflush(stdout);
@@ -138,9 +137,9 @@ class SSFE {
         }
 
         // rebuild the query structure
-        int index = HashGroup::build<KEY_TYPE, HASH>(groups_[g], data_ + g*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS/8, false);
-        hash_index_[g] = index;
-        if (index < 0) {
+        int seed = HashGroup::build<KEY_TYPE, HASH>(groups_[g], data_ + g*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS/8, false);
+        seed_[g] = seed;
+        if (seed < 0) {
             printf("g = %d\n", g);
             printf("group size: %d\n", (int)groups_[g].size());
             assert(false);
@@ -151,9 +150,9 @@ class SSFE {
         int g = h_.hash1(key) & group_num_bitmask_;
         int offset = g*(SSFE_GROUP_BITS/8);
         uint8_t *d = data_ + offset; 
-        prefetch0(hash_index_ + g);
+        prefetch0(seed_ + g);
         prefetch0(data_ + offset);
-        return HashGroup::query_group_size_256<KEY_TYPE, HASH>(key, d, hash_index_[g]);
+        return HashGroup::query_group_size_256<KEY_TYPE, HASH>(key, d, seed_[g]);
     }
 
     void query_batch(KEY_TYPE *keys, bool *res, int batch_size) {
@@ -164,11 +163,11 @@ class SSFE {
         for (int i = 0; i < batch_size; i++) {
             g[i] = h_.hash1(keys[i]) & group_num_bitmask_;
             // !!! imporant
-            prefetch0(hash_index_ + g[i]);
+            prefetch0(seed_ + g[i]);
         }
         // compute the indexes for each gorup
         for (int i = 0; i < batch_size; i++) {
-            auto [h1, h2, h3] = h_.hash3(keys[i], hash_index_[g[i]]);
+            auto [h1, h2, h3] = h_.hash3(keys[i], seed_[g[i]]);
             hs[i][0] = h1 & 255;
             hs[i][1] = h2 & 255;
             hs[i][2] = h3 & 255;
@@ -190,7 +189,7 @@ class SSFE {
     int max_capacity_;
     std::vector<std::vector<std::pair<KEY_TYPE, bool>>> groups_;
     uint8_t* data_ = nullptr;
-    uint8_t* hash_index_ = nullptr;
+    uint8_t* seed_ = nullptr;
 };
 
 template <typename KEY_TYPE>
@@ -212,7 +211,7 @@ class SSFE_DONG {
         assert(data_ == nullptr);
         int avg_load = 256;
 
-        // init groups related stuffs, which is used to index the start postions of groups
+        // init groups related stuffs, groups_ ich is used to index the start postions of groups
         group_num_ = max_capacity / avg_load + 1;    
         groups_ = new uint8_t*[group_num_];
 
@@ -249,7 +248,7 @@ class SSFE_DONG {
 
         // The Group Format:
         // -------------------------------------------------------------
-        // | len, 2 bytes | hash_index  1 bytes | data (len - 3) bytes |
+        // | len, 2 bytes | seed  1 bytes | data (len - 3) bytes |
         // -------------------------------------------------------------
 
         uint8_t *p = data_;
@@ -257,15 +256,15 @@ class SSFE_DONG {
             // setup the group start address
             groups_[i] = p;
 
-            uint16_t len = 3 + (kv_groups_[i].size() * 1.1)/8 + 1; // 2 bytes for len, 1 bytes for hash index, (groups[i].size() * 1.4)/8 + 1 for x values
+            uint16_t len = 3 + (kv_groups_[i].size() * 1.1)/8 + 1; // 2 bytes for len, 1 bytes for seed, (groups[i].size() * 1.4)/8 + 1 for x values
             assert(p + len <= data_ + data_size_);
             
             // copy len
             memcpy(p, &len, sizeof(uint16_t));
 
-            // the build function setups the hash_index and data
-            int hash_index = HashGroup::build<KEY_TYPE, HASH>(kv_groups_[i], p + 2, len - 2);
-            if (hash_index < 0) {
+            // the build function setups the seed and data
+            int seed = HashGroup::build<KEY_TYPE, HASH>(kv_groups_[i], p + 2, len - 2);
+            if (seed < 0) {
                 printf("i = %d\n", i);
                 printf("group size: %d\n", (int)kv_groups_[i].size());
                 assert(false);

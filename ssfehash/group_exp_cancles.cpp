@@ -10,31 +10,32 @@ void run(int n = 256 / 1.4, int m = 256) {
     for (int round = 0; round < tot_rounds; round++) {
         typedef MixFamily2<uint64_t> HASH;
 
-        std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(n, true, round);
+        std::vector<std::pair<uint64_t, bool>> kvs =
+            generate_keyvalues(n, true, round);
         uint8_t *data = new uint8_t[256 / 8];
 
-        // find a feasible hash index
-        int hash_index =
-            HashGroup::build<uint64_t, HASH>(kvs, data, 256 / 8, false);
-        assert(hash_index >= 0);
+        // find a feasible seed
+        int seed = HashGroup::build<uint64_t, HASH>(kvs, data, 256 / 8, false);
+        assert(seed >= 0);
 
         int cancles = 0;
-        bool success = HashGroup::build_expermients_<uint64_t, HASH>(kvs, data, 256 / 8,
-                                                          hash_index, cancles);
+        bool success = HashGroup::build_expermients_<uint64_t, HASH>(
+            kvs, data, 256 / 8, seed, cancles);
         tot_cancles += cancles;
 
         // make sure the build is correct
         assert(success);
         for (auto &kv : kvs) {
             bool r = HashGroup::query_group_size_256<uint64_t, HASH>(
-                kv.first, data, hash_index);
+                kv.first, data, seed);
             assert(r == kv.second);
         }
 
         delete[] data;
     }
 
-    printf("n = %d, m = %d, #cancles in Gaussian Elimination = %.3lf\n", n, m, tot_cancles*1.0/tot_rounds);
+    printf("n = %d, m = %d, #cancles in Gaussian Elimination = %.3lf\n", n, m,
+           tot_cancles * 1.0 / tot_rounds);
 }
 
 int main() {

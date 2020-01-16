@@ -12,21 +12,21 @@ std::tuple<std::vector<std::pair<uint64_t, bool>>, int> prepare() {
     
     uint8_t *data = new uint8_t[256 / 8];
     // find a feasible hash function, use that to benchmark the equations solver
-    int hash_index = HashGroup::build<uint64_t, MixFamily2_256<uint64_t>>(kvs, data, 256 / 8, false);
-    assert(hash_index >= 0);
+    int seed = HashGroup::build<uint64_t, MixFamily2_256<uint64_t>>(kvs, data, 256 / 8, false);
+    assert(seed >= 0);
     delete[] data;
 
-    return std::make_tuple(kvs, hash_index);
+    return std::make_tuple(kvs, seed);
 }
 
 template<typename BUILD>
 static void benchmark_build_function(benchmark::State& state, BUILD build) {
-    auto [kvs, hash_index] = prepare();
+    auto [kvs, seed] = prepare();
     uint8_t *data = new uint8_t[256 / 8];
     {
         PerfEventBenchamrkWrapper e(state);
         for (auto _ : state) {
-            benchmark::DoNotOptimize(build(kvs, data, 256/8, hash_index));
+            benchmark::DoNotOptimize(build(kvs, data, 256/8, seed));
         }
     }
     state.SetItemsProcessed(int64_t(state.iterations()) *

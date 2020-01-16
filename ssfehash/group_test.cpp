@@ -17,21 +17,21 @@ TEST(HashGroup, build_bitset_2_) {
         std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(220, false, round);
         int data_size = 256 / 8;
         uint8_t *data = new uint8_t[data_size];
-        int hash_index = 0;
-        for (; hash_index < 256; hash_index++) {
-            if (HashGroup::build_naive_<uint64_t, MixFamily2<uint64_t>>(kvs, data + 1, data_size - 1, hash_index)) {
+        int seed = 0;
+        for (; seed < 256; seed++) {
+            if (HashGroup::build_naive_<uint64_t, MixFamily2<uint64_t>>(kvs, data + 1, data_size - 1, seed)) {
                 break;
             }
         }
-        assert(hash_index < 256);
+        assert(seed < 256);
         memset(data, 0, data_size);
 
         // build
-        bool succ = HashGroup::build_bitset_2_<uint64_t, MixFamily2<uint64_t>>(kvs, data + 1, data_size - 1, hash_index);
+        bool succ = HashGroup::build_bitset_2_<uint64_t, MixFamily2<uint64_t>>(kvs, data + 1, data_size - 1, seed);
         EXPECT_EQ(succ, true);
 
         // verify
-        data[0] = uint8_t(hash_index);
+        data[0] = uint8_t(seed);
         for (auto &kv : kvs) {
             bool r = HashGroup::query<uint64_t, MixFamily2<uint64_t>>(kv.first, data, data_size);
             EXPECT_EQ(kv.second, r);
@@ -54,6 +54,11 @@ void group_test(std::string name, bool verify=true, bool store_index_into_group_
         // build the hash group
         uint8_t *data = new uint8_t[256 / 8];
         int family_index = HashGroup::build<uint64_t, HASH_FAMILY >(kvs, data, 256 / 8, store_index_into_group_memory);
+        
+        // if (family_index < 0) {
+        //     printf("failed!\n");
+        //     continue;
+        // }
         assert(family_index >= 0);
         
         if (round < 10) {
@@ -94,5 +99,5 @@ TEST(HashGroup, Basic) {
 
     // CRC32 does not work when the group size is exactly 256, due to its special property
     // It does work when store_index_into_group_memory=true because the group size is actully 256 - 8 bits
-    // group_test<CRC32Family<uint64_t>>("CRC32Family", true, false);
+    group_test<CRC32Family<uint64_t>>("CRC32Family", true, false);
 }
