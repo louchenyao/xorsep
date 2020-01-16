@@ -8,7 +8,7 @@ void run(int n = 256 / 1.4, int m = 256) {
     int tot_cancles = 0;
     int tot_rounds = 100;
     for (int round = 0; round < tot_rounds; round++) {
-        typedef MixFamily2<uint64_t> HASH;
+        typedef MixFamily2<uint64_t, 10> HASH;
 
         std::vector<std::pair<uint64_t, bool>> kvs =
             generate_keyvalues(n, true, round);

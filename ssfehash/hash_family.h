@@ -40,18 +40,17 @@ class CRC32Family {
     }
 };
 
-template <typename KEY_TYPE>
-class MixFamily2_256 {
+template <typename KEY_TYPE, int k>
+class MixFamily2 {
    public:
-    MixFamily2_256() {
+    MixFamily2() {
         // require the size of KEY_TYPE is the times of 64 bits
         assert(sizeof(KEY_TYPE) % 8 == 0);
     }
 
-    // the size of each hash value is 8 bits 
     std::tuple<uint16_t, uint16_t, uint16_t> hash3(KEY_TYPE key, int seed) {
         uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), seed);
-        return split_into_uintk<8>(h);
+        return split_into_uintk<k>(h);
     }
 
     uint32_t hash1(KEY_TYPE key) {
@@ -64,20 +63,25 @@ class MixFamily2_256 {
     }
 };
 
-
-template <typename KEY_TYPE>
-class MixFamily2 {
+template <typename KEY_TYPE, int k>
+class MixFamily3 {
    public:
-    MixFamily2() {
+    MixFamily3() {
         // require the size of KEY_TYPE is the times of 64 bits
         assert(sizeof(KEY_TYPE) % 8 == 0);
     }
-
     std::tuple<uint16_t, uint16_t, uint16_t> hash3(KEY_TYPE key, int seed) {
-        uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), seed);
-        return split_into_uintk<10>(h);
+        uint64_t h = seed;
+        if (seed == 0) {
+            uint64_t *t = (uint64_t *)&key;
+            for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
+                h = _mm_crc32_u64(h, t[i]);
+            }
+        } else {
+            h = XXH32((void *)&key, sizeof(KEY_TYPE), seed);
+        }
+        return split_into_uintk<k>(h);
     }
-
     uint32_t hash1(KEY_TYPE key) {
         uint64_t h = 12191410945815747277u;
         uint64_t *t = (uint64_t *)&key;

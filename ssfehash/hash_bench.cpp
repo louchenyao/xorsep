@@ -68,17 +68,23 @@ static void BM_hash1_mod(benchmark::State& state) {
 BENCHMARK_TEMPLATE(BM_hash3, CRC32Family<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash3, Murmur3Family<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash3, XXH32Family<uint64_t>);
-BENCHMARK_TEMPLATE(BM_hash3, MixFamily2_256<uint64_t>);
+BENCHMARK_TEMPLATE(BM_hash3, MixFamily2<uint64_t, 8>);
+BENCHMARK_TEMPLATE(BM_hash3, MixFamily3<uint64_t, 8>);
 
 BENCHMARK_TEMPLATE(BM_hash3_mod, CRC32Family<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash3_mod, Murmur3Family<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash3_mod, XXH32Family<uint64_t>);
+BENCHMARK_TEMPLATE(BM_hash3_mod, MixFamily2<uint64_t, 10>);
+BENCHMARK_TEMPLATE(BM_hash3_mod, MixFamily3<uint64_t, 10>);
 
 BENCHMARK_TEMPLATE(BM_hash1, CRC32Family<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash1, Murmur3Family<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash1, XXH32Family<uint64_t>);
-BENCHMARK_TEMPLATE(BM_hash1, MixFamily2_256<uint64_t>);
+BENCHMARK_TEMPLATE(BM_hash1, MixFamily2<uint64_t, 8>);
+BENCHMARK_TEMPLATE(BM_hash1, MixFamily3<uint64_t, 8>);
 
 BENCHMARK_TEMPLATE(BM_hash1_mod, CRC32Family<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash1_mod, Murmur3Family<uint64_t>);
 BENCHMARK_TEMPLATE(BM_hash1_mod, XXH32Family<uint64_t>);
+BENCHMARK_TEMPLATE(BM_hash1, MixFamily2<uint64_t, 10>);
+BENCHMARK_TEMPLATE(BM_hash1, MixFamily3<uint64_t, 10>);

@@ -19,7 +19,7 @@ TEST(HashGroup, build_bitset_2_) {
         uint8_t *data = new uint8_t[data_size];
         int seed = 0;
         for (; seed < 256; seed++) {
-            if (HashGroup::build_naive_<uint64_t, MixFamily2<uint64_t>>(kvs, data + 1, data_size - 1, seed)) {
+            if (HashGroup::build_naive_<uint64_t, MixFamily2<uint64_t, 10>>(kvs, data + 1, data_size - 1, seed)) {
                 break;
             }
         }
@@ -27,13 +27,13 @@ TEST(HashGroup, build_bitset_2_) {
         memset(data, 0, data_size);
 
         // build
-        bool succ = HashGroup::build_bitset_2_<uint64_t, MixFamily2<uint64_t>>(kvs, data + 1, data_size - 1, seed);
+        bool succ = HashGroup::build_bitset_2_<uint64_t, MixFamily2<uint64_t, 10>>(kvs, data + 1, data_size - 1, seed);
         EXPECT_EQ(succ, true);
 
         // verify
         data[0] = uint8_t(seed);
         for (auto &kv : kvs) {
-            bool r = HashGroup::query<uint64_t, MixFamily2<uint64_t>>(kv.first, data, data_size);
+            bool r = HashGroup::query<uint64_t, MixFamily2<uint64_t, 10>>(kv.first, data, data_size);
             EXPECT_EQ(kv.second, r);
         }
 
@@ -91,13 +91,15 @@ TEST(HashGroup, Basic) {
     group_test<Murmur3Family<uint64_t>>("Murmur3Family", true, true);
     group_test<CRC32Family<uint64_t>>("CRC32Family", true, true);
     group_test<FakeRandomFamily<uint64_t>>("FakeRandomFamily", false, true);
-    group_test<MixFamily2_256<uint64_t>>("MixFamily2", true, true);
+    group_test<MixFamily2<uint64_t, 10>>("MixFamily2_10", true, true);
+    group_test<MixFamily3<uint64_t, 10>>("MixFamily3_10", true, true);
 
     group_test<Murmur3Family<uint64_t>>("Murmur3Family", true, false);
-    group_test<MixFamily2_256<uint64_t>>("MixFamily2_256", true, false);
-    group_test<FakeRandomFamily<uint64_t>>("FakeRandomFamily", false, false);
-
     // CRC32 does not work when the group size is exactly 256, due to its special property
     // It does work when store_index_into_group_memory=true because the group size is actully 256 - 8 bits
-    group_test<CRC32Family<uint64_t>>("CRC32Family", true, false);
+    //group_test<CRC32Family<uint64_t>>("CRC32Family", true, false);
+    group_test<FakeRandomFamily<uint64_t>>("FakeRandomFamily", false, false);;
+    group_test<MixFamily2<uint64_t, 8>>("MixFamily2_8", true, false);
+    group_test<MixFamily3<uint64_t, 8>>("MixFamily3_8", true, false);
+
 }

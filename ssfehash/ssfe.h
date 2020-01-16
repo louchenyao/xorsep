@@ -13,7 +13,7 @@ const int SSFE_GROUP_BITS = 256;
 
 template <typename KEY_TYPE>
 class SSFE {
-    typedef MixFamily2_256<KEY_TYPE> HASH;
+    typedef MixFamily3<KEY_TYPE, 8> HASH;
    public:
     SSFE() = default;
     SSFE(int max_capacity) {
@@ -194,7 +194,7 @@ class SSFE {
 
 template <typename KEY_TYPE>
 class SSFE_DONG {
-    typedef MixFamily2<KEY_TYPE> HASH;
+    typedef MixFamily3<KEY_TYPE, 10> HASH;
    public:
     SSFE_DONG() = default;
     SSFE_DONG(int max_capacity) {
