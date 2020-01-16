@@ -25,14 +25,32 @@ class SSFE {
         delete[] hash_index_;
     }
 
+    // n is #bins (groups), m is #balls (keys)
+    // see https://en.wikipedia.org/wiki/Balls_into_bins_problem
+    static int epected_max_load(int n, int m) {
+        return m/n + sqrt(m*log(n)/n) + 1;
+    }
+
     static int round_capacity(int cap, int &group_num) {
         group_num = 1;
-        while (group_num*SSFE_GROUP_BITS/SSFE_LOAD_FACTOR < cap) {
+        while (epected_max_load(group_num, cap) > 232) {
             group_num *= 2;
         }
 
-        cap = group_num*SSFE_GROUP_BITS/SSFE_LOAD_FACTOR;
-        assert(!(group_num*SSFE_GROUP_BITS/SSFE_LOAD_FACTOR < cap));
+        //find the maximum capacity when keep the group_num unchanged 
+        int l = cap, r = 1000*1000*1000;
+        assert(l < r);
+        while (l + 1 < r) {
+            int mid = (l + r) / 2;
+            if (epected_max_load(group_num, mid) <= 232) {
+                l = mid;
+            } else {
+                r = mid;
+            }
+        }
+        cap = l;
+
+        assert(epected_max_load(cap, group_num) <= 232);
         return cap;
     }
 

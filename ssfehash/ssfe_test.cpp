@@ -6,6 +6,7 @@
 TEST(SSFE, BuildWithTightSizes) {
     int group_num;
     int n = SSFE<uint64_t>::round_capacity(10*1000*1000, group_num);
+    printf("n = %d group_num = %d utilization = %.2lf\n", n, group_num, group_num*256.0/n);
     std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(n);
     SSFE<uint64_t> ssfe(kvs.size());
     ssfe.build(kvs);
