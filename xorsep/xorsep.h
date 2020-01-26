@@ -97,9 +97,12 @@ class XorSep {
             groups_[g].push_back(kv);
         }
 
+
+        //int seed0_cnt = 0;
         for (int i = 0; i < group_num_; i++) {
             int seed = HashGroup::build<KEY_TYPE, HASH>(groups_[i], data_ + i*(XORSEP_GROUP_BITS/8), XORSEP_GROUP_BITS / 8, false);
             seed_[i] = seed;
+            //if (seed == 0) seed0_cnt++;
             if (seed < 0) {
                 printf("i = %d\n", i);
                 printf("group size: %d\n", (int)groups_[i].size());
@@ -107,6 +110,7 @@ class XorSep {
                 assert(false);
             }
         }
+        //printf("groups = %d, seed0_cnt = %d\n", group_num_, seed0_cnt);
     }
 
     // update is not thread-safe

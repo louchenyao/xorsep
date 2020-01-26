@@ -49,7 +49,7 @@ void group_test(std::string name, bool verify=true, bool store_index_into_group_
 
     for (int round = 0; round < tot_rounds; round++) {
         // construct key-value pairs
-        std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(220, false, round);
+        std::vector<std::pair<uint64_t, bool>> kvs = generate_keyvalues(225, false, round);
 
         // build the hash group
         uint8_t *data = new uint8_t[256 / 8];
