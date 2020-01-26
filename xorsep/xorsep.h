@@ -195,19 +195,16 @@ class XorSepDyn {
         init(max_capacity);
     }
     ~XorSepDyn() {
-        if (data_ != nullptr) {
-            delete[] data_;
-            delete[] groups_;
-        }
+        clear();
     }
 
     void init(int max_capacity) {
         assert(data_ == nullptr);
         int avg_load = 256;
 
-        // init groups related stuffs, groups_ ich is used to index the start postions of groups
+        // init groups stuffs, which is used to index the start postions of groups
         group_num_ = max_capacity / avg_load + 1;    
-        groups_ = new uint8_t*[group_num_];
+        groups_ = new uint8_t*[group_num_+1]; // the extra slot is for the dummpy ending group
 
         // the maintaince struct, which stores kv pairs
         kv_groups_.resize(group_num_);
@@ -216,7 +213,7 @@ class XorSepDyn {
         }
 
         // init data related stuffs, which is used as "bit array"-s of groups
-        data_size_ = group_num_ * (avg_load*1.1/8 + 4);
+        data_size_ = group_num_ * (avg_load*1.1/8 + 2);
         data_ = new uint8_t[data_size_];
     }
 
@@ -239,23 +236,20 @@ class XorSepDyn {
         }
 
         // The Group Format:
-        // -------------------------------------------------------------
-        // | len, 2 bytes | seed  1 bytes | data (len - 3) bytes |
-        // -------------------------------------------------------------
+        // ----------------------------------------
+        // | seed  1 bytes | data (len - 1) bytes |
+        // ----------------------------------------
 
         uint8_t *p = data_;
         for (int i = 0; i < group_num_; i++) {
             // setup the group start address
             groups_[i] = p;
 
-            uint16_t len = 3 + (kv_groups_[i].size() * 1.1)/8 + 1; // 2 bytes for len, 1 bytes for seed, (groups[i].size() * 1.4)/8 + 1 for x values
+            uint16_t len = (kv_groups_[i].size() * 1.1)/8 + 2; // 1 bytes for seed, (groups[i].size() * 1.1)/8 + 1 for the bit array
             assert(p + len <= data_ + data_size_);
-            
-            // copy len
-            memcpy(p, &len, sizeof(uint16_t));
 
             // the build function setups the seed and data
-            int seed = HashGroup::build<KEY_TYPE, HASH>(kv_groups_[i], p + 2, len - 2);
+            int seed = HashGroup::build<KEY_TYPE, HASH>(kv_groups_[i], p, len);
             if (seed < 0) {
                 printf("i = %d\n", i);
                 printf("group size: %d\n", (int)kv_groups_[i].size());
@@ -264,34 +258,34 @@ class XorSepDyn {
 
             p += len;
         }
+        
+        // dumpy group. It does not store any data, but marks the ending of the data array
+        groups_[group_num_] = p;
     }
 
     bool query(KEY_TYPE key) {
         int g = h_.hash1(key) % group_num_;
-        uint8_t *group = groups_[g];
-
-        uint16_t len = 0;
-        memcpy(&len, group, sizeof(uint16_t));
-        return HashGroup::query<KEY_TYPE, HASH>(key, group + 2, len - 2);
+        prefetch0(groups_[g]);
+        uint16_t len = groups_[g+1] - groups_[g];
+        return HashGroup::query<KEY_TYPE, HASH>(key, groups_[g], len);
     }
 
     void query_batch(KEY_TYPE *keys, bool *res, int batch_size) {
         assert(batch_size <= 16);
-        uint8_t *g[16];
+        int g[16];
         for (int i = 0; i < batch_size; i++) {
-            g[i] = groups_[h_.hash1(keys[i]) % group_num_];
+            g[i] = h_.hash1(keys[i]) % group_num_;
         }
 
         // prefetch data
         for (int i = 0; i < batch_size; i++) {
-            prefetch0(g[i]);
+            prefetch0(groups_[g[i]]);
         }
 
         // query
         for (int i = 0; i < batch_size; i++) {
-            uint16_t len = 0;
-            memcpy(&len, g[i], sizeof(uint16_t));
-            res[i] = HashGroup::query<KEY_TYPE, HASH>(keys[i], g[i] + 2, len - 2);
+            uint16_t len = groups_[g[i]+1] - groups_[g[i]];
+            res[i] = HashGroup::query<KEY_TYPE, HASH>(keys[i], groups_[g[i]], len);
         }
     }
 
