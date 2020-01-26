@@ -38,8 +38,8 @@ def plot_query(log):
     ssfe_query_batch = extract_benchmark(log, "/ssfe_query_batch/")
     ssfe_dyn_query = extract_benchmark(log, "/ssfe_dong_query/")
     ssfe_dyn_query_batch = extract_benchmark(log, "/ssfe_dong_query_batch/")
-    sepset_query = extract_benchmark(log, "/sepset_query/")
-    sepset_query_batch = extract_benchmark(log, "/sepset_query_batch/")
+    setsep_query = extract_benchmark(log, "/setsep_query/")
+    setsep_query_batch = extract_benchmark(log, "/setsep_query_batch/")
     othello_query = extract_benchmark(log, "/othello_query/")
 
     matplotlib.rcParams.update({'font.size': 20}) 
@@ -54,8 +54,8 @@ def plot_query(log):
     ax.plot(ssfe_query_batch['keys'], ssfe_query_batch['cpu_time'], label='SSFE+batch', marker='^', color='rosybrown')
     ax.plot(ssfe_dyn_query['keys'], ssfe_dyn_query['cpu_time'], label='SSFE_DYN', marker='<', color='bisque')
     ax.plot(ssfe_dyn_query_batch['keys'], ssfe_dyn_query_batch['cpu_time'], label='SSFE_DYN+batch', marker='>', color='greenyellow')
-    ax.plot(sepset_query['keys'], sepset_query['cpu_time'], label='SetSep', marker='1', color='orangered')
-    ax.plot(sepset_query_batch['keys'], sepset_query_batch['cpu_time'], label='SetSep+batch', marker='2', color='fuchsia')
+    ax.plot(setsep_query['keys'], setsep_query['cpu_time'], label='SetSep', marker='1', color='orangered')
+    ax.plot(setsep_query_batch['keys'], setsep_query_batch['cpu_time'], label='SetSep+batch', marker='2', color='fuchsia')
     ax.plot(othello_query['keys'], othello_query['cpu_time'], label='Othello', marker='3', color='navy')
 
     # plot llc-misses
@@ -68,8 +68,8 @@ def plot_query(log):
         ax.plot(ssfe_query_batch['keys'], ssfe_query_batch['LLC-misses'], label='SSFE+batch', marker='^', color='rosybrown')
         ax.plot(ssfe_dyn_query['keys'], ssfe_dyn_query['LLC-misses'], label='SSFE_DYN', marker='<', color='bisque')
         ax.plot(ssfe_dyn_query_batch['keys'], ssfe_dyn_query_batch['LLC-misses'], label='SSFE_DYN+batch', marker='>', color='greenyellow')
-        ax.plot(sepset_query['keys'], sepset_query['LLC-misses'], label='SetSep', marker='1', color='orangered')
-        ax.plot(sepset_query_batch['keys'], sepset_query_batch['LLC-misses'], label='SetSep+batch', marker='2', color='fuchsia')
+        ax.plot(setsep_query['keys'], setsep_query['LLC-misses'], label='SetSep', marker='1', color='orangered')
+        ax.plot(setsep_query_batch['keys'], setsep_query_batch['LLC-misses'], label='SetSep+batch', marker='2', color='fuchsia')
         ax.plot(othello_query['keys'], othello_query['LLC-misses'], label='Othello', marker='3', color='navy')
  
     handles, labels = ax.get_legend_handles_labels()

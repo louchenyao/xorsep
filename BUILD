@@ -1,16 +1,16 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_binary")
 
-SEPSET_COPTS = ["-Wno-error=register"]
-SEPSET_LINKOPTS = ["-pthread", "-lnuma", "-ldl"]
+SETSEP_COPTS = ["-Wno-error=register"]
+SETSEP_LINKOPTS = ["-pthread", "-lnuma", "-ldl"]
 
 cc_binary(
     name = "bench",
     srcs = glob(["ssfehash/*_bench.cpp"]),
     # use -Wno-error=strict-overflow there because O3 trigers a gcc bug
     # https://stackoverflow.com/questions/12984861/dont-understand-assuming-signed-overflow-warning
-    copts = ["-std=c++17", "-O3", "-march=native", "-Wall", "-Wextra", "-Werror", "-Wno-error=strict-overflow"] + SEPSET_COPTS,
+    copts = ["-std=c++17", "-O3", "-march=native", "-Wall", "-Wextra", "-Werror", "-Wno-error=strict-overflow"] + SETSEP_COPTS,
     linkopts = select({
-        "@bazel_tools//src/conditions:linux_x86_64": SEPSET_LINKOPTS,
+        "@bazel_tools//src/conditions:linux_x86_64": SETSEP_LINKOPTS,
         "//conditions:default": [],
     }),
     defines = ["NO_OUTPUT"], # for annoying othello
@@ -22,7 +22,7 @@ cc_binary(
         "//:ssfehash",
         "//:dev_utils",
     ] + select({
-        "@bazel_tools//src/conditions:linux_x86_64": ["@dpdk//:sepset"],
+        "@bazel_tools//src/conditions:linux_x86_64": ["@dpdk//:setsep"],
         "//conditions:default": [],
     }),
 )

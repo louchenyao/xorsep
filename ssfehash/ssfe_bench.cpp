@@ -8,7 +8,7 @@
 #include "dev_utils/perf_event_helper.h"
 
 #ifdef __linux__
-#include "sepset.h"
+#include "setsep.h"
 #endif
 
 
@@ -230,10 +230,10 @@ BENCHMARK_REGISTER_F(SSFEBuildFixture, othello_query)->Apply(othello_args);
 // * SetSep
 // ************
 
-// sepset query
+// setsep query
 #ifdef __linux__
 
-static int sepset_round_capacity(int cap) {
+static int setsep_round_capacity(int cap) {
     // the following round rules are from rte_efd.c:529
     // num_chunks = rte_align32pow2(max_num_rules/EFD_TARGET_CHUNK_NUM_RULES);
 
@@ -251,32 +251,32 @@ static void setsep_args(benchmark::internal::Benchmark *b) {
     std::vector<int> big_args = {40*1000*1000, 80*1000*1000};
 
     for (auto c: small_args) {
-        b->Arg(sepset_round_capacity(c));
+        b->Arg(setsep_round_capacity(c));
     }
 
     if (enough_memory()) {
         for (auto c: big_args) {
-            b->Arg(sepset_round_capacity(c));
+            b->Arg(setsep_round_capacity(c));
         }
     }
 }
 
-BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_query, SepSet<uint64_t>)(benchmark::State& state) {
-    benchmark_query<SepSet<uint64_t>>(ssfe, kvs, state);
+BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, setsep_query, SetSep<uint64_t>)(benchmark::State& state) {
+    benchmark_query<SetSep<uint64_t>>(ssfe, kvs, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query)->Apply(setsep_args);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, setsep_query)->Apply(setsep_args);
 
-// sepset query batch
-BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_query_batch, SepSet<uint64_t>)(benchmark::State& state) {
-    benchmark_query_batch<SepSet<uint64_t>>(ssfe, kvs, state);
+// setsep query batch
+BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, setsep_query_batch, SetSep<uint64_t>)(benchmark::State& state) {
+    benchmark_query_batch<SetSep<uint64_t>>(ssfe, kvs, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_query_batch)->Apply(setsep_args);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, setsep_query_batch)->Apply(setsep_args);
 
-// sepset update
-BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, sepset_update, SepSet<uint64_t>)(benchmark::State& state) {
-    benchmark_update<SepSet<uint64_t>>(ssfe, state);
+// setsep update
+BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, setsep_update, SetSep<uint64_t>)(benchmark::State& state) {
+    benchmark_update<SetSep<uint64_t>>(ssfe, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, sepset_update)->Apply(args_10m);
+BENCHMARK_REGISTER_F(SSFEBuildFixture, setsep_update)->Apply(args_10m);
 #endif
 
 // ************
