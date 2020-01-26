@@ -9,7 +9,7 @@ const int XORSEP_GROUP_BITS = 256;
 
 template <typename KEY_TYPE>
 class XorSep {
-    typedef MixFamily3<KEY_TYPE, 8> HASH;
+    typedef MixFamily2<KEY_TYPE, 8> HASH;
    public:
     XorSep() = default;
     XorSep(int max_capacity) {
@@ -192,7 +192,7 @@ class XorSep {
 
 template <typename KEY_TYPE>
 class XorSepDyn {
-    typedef MixFamily3<KEY_TYPE, 10> HASH;
+    typedef MixFamily2<KEY_TYPE, 10> HASH;
    public:
     XorSepDyn() = default;
     XorSepDyn(int max_capacity) {

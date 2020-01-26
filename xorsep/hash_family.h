@@ -78,6 +78,7 @@ class MixFamily3 {
             for (uint32_t i = 0; i < sizeof(KEY_TYPE) / 8; i++) {
                 h = _mm_crc32_u64(h, t[i]);
             }
+            return split_into_uintk<k>(h);
         }
         
         uint32_t h = XXH32((void *)&key, sizeof(KEY_TYPE), seed);
