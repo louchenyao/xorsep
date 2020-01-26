@@ -34,10 +34,10 @@ def extract_benchmark(df, contains_str):
 
 # plot the figure of query performances
 def plot_query(log):
-    ssfe_query = extract_benchmark(log, "/ssfe_query/")
-    ssfe_query_batch = extract_benchmark(log, "/ssfe_query_batch/")
-    ssfe_dyn_query = extract_benchmark(log, "/ssfe_dong_query/")
-    ssfe_dyn_query_batch = extract_benchmark(log, "/ssfe_dong_query_batch/")
+    xorsep_query = extract_benchmark(log, "/xorsep_query/")
+    xorsep_query_batch = extract_benchmark(log, "/xorsep_query_batch/")
+    xorsepdyn_query = extract_benchmark(log, "/xorsepdyn_query/")
+    xorsepdyn_query_batch = extract_benchmark(log, "/xorsepdyn_query_batch/")
     setsep_query = extract_benchmark(log, "/setsep_query/")
     setsep_query_batch = extract_benchmark(log, "/setsep_query_batch/")
     othello_query = extract_benchmark(log, "/othello_query/")
@@ -50,24 +50,24 @@ def plot_query(log):
     ax.grid(True, axis='both')
     ax.set_xlabel("# Keys")
     ax.set_ylabel("Query Time (ns)")
-    ax.plot(ssfe_query['keys'], ssfe_query['cpu_time'], label='SSFE', marker='v', color='teal')
-    ax.plot(ssfe_query_batch['keys'], ssfe_query_batch['cpu_time'], label='SSFE+batch', marker='^', color='rosybrown')
-    ax.plot(ssfe_dyn_query['keys'], ssfe_dyn_query['cpu_time'], label='SSFE_DYN', marker='<', color='bisque')
-    ax.plot(ssfe_dyn_query_batch['keys'], ssfe_dyn_query_batch['cpu_time'], label='SSFE_DYN+batch', marker='>', color='greenyellow')
+    ax.plot(xorsep_query['keys'], xorsep_query['cpu_time'], label='XorSep', marker='v', color='teal')
+    ax.plot(xorsep_query_batch['keys'], xorsep_query_batch['cpu_time'], label='XorSep+batch', marker='^', color='rosybrown')
+    ax.plot(xorsepdyn_query['keys'], xorsepdyn_query['cpu_time'], label='XorSepDyn', marker='<', color='bisque')
+    ax.plot(xorsepdyn_query_batch['keys'], xorsepdyn_query_batch['cpu_time'], label='XorSepDyn+batch', marker='>', color='greenyellow')
     ax.plot(setsep_query['keys'], setsep_query['cpu_time'], label='SetSep', marker='1', color='orangered')
     ax.plot(setsep_query_batch['keys'], setsep_query_batch['cpu_time'], label='SetSep+batch', marker='2', color='fuchsia')
     ax.plot(othello_query['keys'], othello_query['cpu_time'], label='Othello', marker='3', color='navy')
 
     # plot llc-misses
-    if "LLC-misses" in ssfe_query.columns.values:
+    if "LLC-misses" in xorsep_query.columns.values:
         ax = axs[1]
         ax.grid(True, axis='both')
         ax.set_xlabel("# Keys")
         ax.set_ylabel("LLC-misses")
-        ax.plot(ssfe_query['keys'], ssfe_query['LLC-misses'], label='SSFE', marker='v', color='teal')
-        ax.plot(ssfe_query_batch['keys'], ssfe_query_batch['LLC-misses'], label='SSFE+batch', marker='^', color='rosybrown')
-        ax.plot(ssfe_dyn_query['keys'], ssfe_dyn_query['LLC-misses'], label='SSFE_DYN', marker='<', color='bisque')
-        ax.plot(ssfe_dyn_query_batch['keys'], ssfe_dyn_query_batch['LLC-misses'], label='SSFE_DYN+batch', marker='>', color='greenyellow')
+        ax.plot(xorsep_query['keys'], xorsep_query['LLC-misses'], label='XorSep', marker='v', color='teal')
+        ax.plot(xorsep_query_batch['keys'], xorsep_query_batch['LLC-misses'], label='XorSep+batch', marker='^', color='rosybrown')
+        ax.plot(xorsepdyn_query['keys'], xorsepdyn_query['LLC-misses'], label='XorSepDyn', marker='<', color='bisque')
+        ax.plot(xorsepdyn_query_batch['keys'], xorsepdyn_query_batch['LLC-misses'], label='XorSepDyn+batch', marker='>', color='greenyellow')
         ax.plot(setsep_query['keys'], setsep_query['LLC-misses'], label='SetSep', marker='1', color='orangered')
         ax.plot(setsep_query_batch['keys'], setsep_query_batch['LLC-misses'], label='SetSep+batch', marker='2', color='fuchsia')
         ax.plot(othello_query['keys'], othello_query['LLC-misses'], label='Othello', marker='3', color='navy')

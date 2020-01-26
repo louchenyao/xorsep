@@ -2,24 +2,20 @@
 
 #include <vector>
 
-#include "ssfehash/prefetch.h"
-#include "ssfehash/group.h"
+#include "xorsep/prefetch.h"
+#include "xorsep/group.h"
 
-// static void print_space_utilization(const char *algo, int bytes, int max_capacity) {
-//     printf("%s: %.3lf bits/key, capacity: %d\n", algo, bytes*8.0 / max_capacity, max_capacity);
-// }
-
-const int SSFE_GROUP_BITS = 256;
+const int XORSEP_GROUP_BITS = 256;
 
 template <typename KEY_TYPE>
-class SSFE {
+class XorSep {
     typedef MixFamily3<KEY_TYPE, 8> HASH;
    public:
-    SSFE() = default;
-    SSFE(int max_capacity) {
+    XorSep() = default;
+    XorSep(int max_capacity) {
         init(max_capacity);
     }
-    ~SSFE() {
+    ~XorSep() {
         delete[] data_;
         delete[] seed_;
     }
@@ -69,16 +65,14 @@ class SSFE {
         seed_ = new uint8_t[group_num_];
         assert(seed_ != nullptr);
 
-        int data_size = group_num_ * (SSFE_GROUP_BITS/8);
+        int data_size = group_num_ * (XORSEP_GROUP_BITS/8);
         data_ = new uint8_t[data_size];
         assert(data_ != nullptr);
-
-        //print_space_utilization("SSFE", data_size, max_capacity);
     }
 
     // get_space_usage returns a tuple (actual size, max capacity size)
     std::tuple<uint32_t, uint32_t> get_space_usage() {
-        return std::make_tuple(uint32_t(group_num_ + group_num_ * (SSFE_GROUP_BITS/8)), uint32_t(max_capacity_ / 8));
+        return std::make_tuple(uint32_t(group_num_ + group_num_ * (XORSEP_GROUP_BITS/8)), uint32_t(max_capacity_ / 8));
     }
 
     void clear() {
@@ -104,7 +98,7 @@ class SSFE {
         }
 
         for (int i = 0; i < group_num_; i++) {
-            int seed = HashGroup::build<KEY_TYPE, HASH>(groups_[i], data_ + i*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS / 8, false);
+            int seed = HashGroup::build<KEY_TYPE, HASH>(groups_[i], data_ + i*(XORSEP_GROUP_BITS/8), XORSEP_GROUP_BITS / 8, false);
             seed_[i] = seed;
             if (seed < 0) {
                 printf("i = %d\n", i);
@@ -137,7 +131,7 @@ class SSFE {
         }
 
         // rebuild the query structure
-        int seed = HashGroup::build<KEY_TYPE, HASH>(groups_[g], data_ + g*(SSFE_GROUP_BITS/8), SSFE_GROUP_BITS/8, false);
+        int seed = HashGroup::build<KEY_TYPE, HASH>(groups_[g], data_ + g*(XORSEP_GROUP_BITS/8), XORSEP_GROUP_BITS/8, false);
         seed_[g] = seed;
         if (seed < 0) {
             printf("g = %d\n", g);
@@ -148,7 +142,7 @@ class SSFE {
 
     bool query(KEY_TYPE key) {
         int g = h_.hash1(key) & group_num_bitmask_;
-        int offset = g*(SSFE_GROUP_BITS/8);
+        int offset = g*(XORSEP_GROUP_BITS/8);
         uint8_t *d = data_ + offset; 
         prefetch0(seed_ + g);
         prefetch0(data_ + offset);
@@ -172,11 +166,11 @@ class SSFE {
             hs[i][1] = h2 & 255;
             hs[i][2] = h3 & 255;
             // !!! imporant
-            prefetch0(data_ + g[i]*(SSFE_GROUP_BITS/8));
+            prefetch0(data_ + g[i]*(XORSEP_GROUP_BITS/8));
         }
         // compute the results
         for (int i = 0; i < batch_size; i++) {
-            uint8_t *d = data_ + g[i]*(SSFE_GROUP_BITS/8);
+            uint8_t *d = data_ + g[i]*(XORSEP_GROUP_BITS/8);
             res[i] = get_bit(d, hs[i][0]) ^ get_bit(d, hs[i][1]) ^ get_bit(d, hs[i][2]);
         }
     }
@@ -193,14 +187,14 @@ class SSFE {
 };
 
 template <typename KEY_TYPE>
-class SSFE_DONG {
+class XorSepDyn {
     typedef MixFamily3<KEY_TYPE, 10> HASH;
    public:
-    SSFE_DONG() = default;
-    SSFE_DONG(int max_capacity) {
+    XorSepDyn() = default;
+    XorSepDyn(int max_capacity) {
         init(max_capacity);
     }
-    ~SSFE_DONG() {
+    ~XorSepDyn() {
         if (data_ != nullptr) {
             delete[] data_;
             delete[] groups_;
@@ -224,8 +218,6 @@ class SSFE_DONG {
         // init data related stuffs, which is used as "bit array"-s of groups
         data_size_ = group_num_ * (avg_load*1.1/8 + 4);
         data_ = new uint8_t[data_size_];
-
-        // print_space_utilization("SSFE_DONG", group_num_ + data_size_, max_capacity);
     }
 
     void clear() {

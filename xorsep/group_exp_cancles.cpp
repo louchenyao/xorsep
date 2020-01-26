@@ -2,7 +2,7 @@
 #include <set>
 
 #include "dev_utils/dev_utils.h"
-#include "ssfehash/group.h"
+#include "xorsep/group.h"
 
 void run(int n = 256 / 1.4, int m = 256) {
     int tot_cancles = 0;

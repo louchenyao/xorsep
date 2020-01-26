@@ -2,7 +2,7 @@
 
 #include <set>
 
-#include "ssfehash/group.h"
+#include "xorsep/group.h"
 #include "dev_utils/dev_utils.h"
 
 TEST(HashGroup, BitManipulation) {

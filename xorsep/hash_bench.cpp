@@ -1,6 +1,6 @@
 #include <benchmark/benchmark.h>
 
-#include "ssfehash/hash_family.h"
+#include "xorsep/hash_family.h"
 #include "dev_utils/dev_utils.h"
 
 // Note:

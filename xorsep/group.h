@@ -5,7 +5,7 @@
 #include <vector>
 #include <x86intrin.h>
 
-#include "ssfehash/hash_family.h"
+#include "xorsep/hash_family.h"
 
 template <typename T>
 inline bool get_bit(T *data, int i) {

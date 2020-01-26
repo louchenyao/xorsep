@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <string>
 
-#include "ssfehash/ssfe.h"
+#include "xorsep/xorsep.h"
 #include "othello_wrapper.h"
 #include "dev_utils/dev_utils.h"
 #include "dev_utils/perf_event_helper.h"
@@ -31,32 +31,32 @@ static void BM_stdmap_query(benchmark::State& state) {
     }
 }
 
-template <class SSFE_T>
-// SSFEBuildFixture generate a ssfe instance with given capacity
-class SSFEBuildFixture : public benchmark::Fixture {
+template <class T>
+// BuildFixture generate a separator instance with the given capacity
+class BuildFixture : public benchmark::Fixture {
    public:
     void SetUp(const ::benchmark::State& state) {
         if (n != state.range(0)) {
             n = state.range(0);
-            ssfe.clear();
-            ssfe.init(state.range(0));
+            sep.clear();
+            sep.init(state.range(0));
             kvs = generate_keyvalues(state.range(0));
-            ssfe.build(kvs);
+            sep.build(kvs);
         }
     }
-    SSFE_T ssfe;
+    T sep;
     std::vector<std::pair<uint64_t, bool>> kvs;
     int n = 0;
 };
 
-template <typename SSFE_T>
-void benchmark_query(SSFE_T &ssfe, std::vector<std::pair<uint64_t, bool>> &kvs, benchmark::State& state) {
+template <typename T>
+void benchmark_query(T &sep, std::vector<std::pair<uint64_t, bool>> &kvs, benchmark::State& state) {
     // Benchmark
     int i = 0;
     {
         PerfEventBenchamrkWrapper e(state);
         for (auto _ : state) {
-            benchmark::DoNotOptimize(ssfe.query(kvs[i].first));
+            benchmark::DoNotOptimize(sep.query(kvs[i].first));
             i = i + 1;
             if (i == state.range(0)) {
                 i = 0;
@@ -65,8 +65,8 @@ void benchmark_query(SSFE_T &ssfe, std::vector<std::pair<uint64_t, bool>> &kvs, 
     }
 }
 
-template <class SSFE_T>
-void benchmark_query_batch(SSFE_T &ssfe, std::vector<std::pair<uint64_t, bool>> &kvs, benchmark::State& state) {
+template <class T>
+void benchmark_query_batch(T &sep, std::vector<std::pair<uint64_t, bool>> &kvs, benchmark::State& state) {
     // Benchmark
     int i = 0;
     {
@@ -81,34 +81,34 @@ void benchmark_query_batch(SSFE_T &ssfe, std::vector<std::pair<uint64_t, bool>> 
             if (i + 16 >= state.range(0)) {
                 i = 0;
             }
-            ssfe.query_batch(keys, res, 16);
+            sep.query_batch(keys, res, 16);
             benchmark::DoNotOptimize(res[0]);
         }
     }
 }
 
-template <class SSFE_T>
-static void BM_ssfe_build(benchmark::State& state) {
+template <class T>
+static void BM_build(benchmark::State& state) {
     auto kvs = generate_keyvalues(state.range(0));
     
     // Benchmark
     for (auto _ : state) {
-        SSFE_T ssfe(kvs.size());
-        ssfe.build(kvs);
+        T sep(kvs.size());
+        sep.build(kvs);
         // ensure the compiler won't optimize the build function
-        benchmark::DoNotOptimize(ssfe.query(kvs[0].first));
+        benchmark::DoNotOptimize(sep.query(kvs[0].first));
     }
 
     state.SetItemsProcessed(int64_t(state.iterations()) *
                             int64_t(state.range(0)));
 }
 
-template <class SSFE_T>
-void benchmark_update(SSFE_T &ssfe, benchmark::State& state) {
+template <class T>
+void benchmark_update(T &sep, benchmark::State& state) {
     int i = 0;
     // Benchmark
     for (auto _ : state) {
-        ssfe.update(i, i % 2);
+        sep.update(i, i % 2);
 
         i = i + 1;
         if (i == state.range(0)) {
@@ -116,7 +116,7 @@ void benchmark_update(SSFE_T &ssfe, benchmark::State& state) {
         }
     }
 
-    benchmark::DoNotOptimize(ssfe.query(0));
+    benchmark::DoNotOptimize(sep.query(0));
 }
 
 // ************
@@ -142,49 +142,49 @@ static void args_200m(benchmark::internal::Benchmark* b) {
 }
 
 // ************
-// * SSFE
+// * XorSep
 // ************
 
-static int ssfe_round_capacity(int cap) {
+static int xorsep_round_capacity(int cap) {
     int group_num = 0;
-    return SSFE<uint64_t>::round_capacity(cap, group_num);
+    return XorSep<uint64_t>::round_capacity(cap, group_num);
 }
 
-static void ssfe_args(benchmark::internal::Benchmark* b) {
+static void xorsep_args(benchmark::internal::Benchmark* b) {
     std::vector<int> small_args = {1000, 1000*1000, 10*1000*1000, 20*1000*1000, 40*1000*1000};
     std::vector<int> big_args = {80*1000*1000, 160*1000*1000};
     
     for (auto c: small_args) {
-        b->Arg(ssfe_round_capacity(c));
+        b->Arg(xorsep_round_capacity(c));
     }
 
     if (enough_memory()) {
         for (auto c: big_args) {
-            b->Arg(ssfe_round_capacity(c));
+            b->Arg(xorsep_round_capacity(c));
         }
     }
 }
 
-// ssfe build
-BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE<uint64_t>)->Apply(args_10m);
+// xorsep build
+BENCHMARK_TEMPLATE(BM_build, XorSep<uint64_t>)->Apply(args_10m);
 
-// ssfe query
-BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_query, SSFE<uint64_t>)(benchmark::State& state) {
-    benchmark_query<SSFE<uint64_t>>(ssfe, kvs, state);
+// xorsep query
+BENCHMARK_TEMPLATE_DEFINE_F(BuildFixture, xorsep_query, XorSep<uint64_t>)(benchmark::State& state) {
+    benchmark_query<XorSep<uint64_t>>(sep, kvs, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query)->Apply(ssfe_args);
+BENCHMARK_REGISTER_F(BuildFixture, xorsep_query)->Apply(xorsep_args);
 
-// ssfe query batch
-BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_query_batch, SSFE<uint64_t>)(benchmark::State& state) {
-    benchmark_query_batch<SSFE<uint64_t>>(ssfe, kvs, state);
+// xorsep query batch
+BENCHMARK_TEMPLATE_DEFINE_F(BuildFixture, xorsep_query_batch, XorSep<uint64_t>)(benchmark::State& state) {
+    benchmark_query_batch<XorSep<uint64_t>>(sep, kvs, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_query_batch)->Apply(ssfe_args);
+BENCHMARK_REGISTER_F(BuildFixture, xorsep_query_batch)->Apply(xorsep_args);
 
-// ssfe update
-BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_update, SSFE<uint64_t>)(benchmark::State& state) {
-    benchmark_update<SSFE<uint64_t>>(ssfe, state);
+// xorsep update
+BENCHMARK_TEMPLATE_DEFINE_F(BuildFixture, xorsep_update, XorSep<uint64_t>)(benchmark::State& state) {
+    benchmark_update<XorSep<uint64_t>>(sep, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_update)->Apply(args_10m);
+BENCHMARK_REGISTER_F(BuildFixture, xorsep_update)->Apply(args_10m);
 
 // ************
 // * Othello
@@ -221,10 +221,10 @@ static void othello_args(benchmark::internal::Benchmark* b) {
 }
 
 // othello query
-BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, othello_query, OthelloWrapper<uint64_t>)(benchmark::State& state) {
-    benchmark_query<OthelloWrapper<uint64_t>>(ssfe, kvs, state);
+BENCHMARK_TEMPLATE_DEFINE_F(BuildFixture, othello_query, OthelloWrapper<uint64_t>)(benchmark::State& state) {
+    benchmark_query<OthelloWrapper<uint64_t>>(sep, kvs, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, othello_query)->Apply(othello_args);
+BENCHMARK_REGISTER_F(BuildFixture, othello_query)->Apply(othello_args);
 
 // ************
 // * SetSep
@@ -261,42 +261,42 @@ static void setsep_args(benchmark::internal::Benchmark *b) {
     }
 }
 
-BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, setsep_query, SetSep<uint64_t>)(benchmark::State& state) {
-    benchmark_query<SetSep<uint64_t>>(ssfe, kvs, state);
+BENCHMARK_TEMPLATE_DEFINE_F(BuildFixture, setsep_query, SetSep<uint64_t>)(benchmark::State& state) {
+    benchmark_query<SetSep<uint64_t>>(sep, kvs, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, setsep_query)->Apply(setsep_args);
+BENCHMARK_REGISTER_F(BuildFixture, setsep_query)->Apply(setsep_args);
 
 // setsep query batch
-BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, setsep_query_batch, SetSep<uint64_t>)(benchmark::State& state) {
-    benchmark_query_batch<SetSep<uint64_t>>(ssfe, kvs, state);
+BENCHMARK_TEMPLATE_DEFINE_F(BuildFixture, setsep_query_batch, SetSep<uint64_t>)(benchmark::State& state) {
+    benchmark_query_batch<SetSep<uint64_t>>(sep, kvs, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, setsep_query_batch)->Apply(setsep_args);
+BENCHMARK_REGISTER_F(BuildFixture, setsep_query_batch)->Apply(setsep_args);
 
 // setsep update
-BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, setsep_update, SetSep<uint64_t>)(benchmark::State& state) {
-    benchmark_update<SetSep<uint64_t>>(ssfe, state);
+BENCHMARK_TEMPLATE_DEFINE_F(BuildFixture, setsep_update, SetSep<uint64_t>)(benchmark::State& state) {
+    benchmark_update<SetSep<uint64_t>>(sep, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, setsep_update)->Apply(args_10m);
+BENCHMARK_REGISTER_F(BuildFixture, setsep_update)->Apply(args_10m);
 #endif
 
 // ************
-// * SSFE Dong
+// * XorSepDyn
 // ************
 
-// ssfe_dong query
-BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_dong_query, SSFE_DONG<uint64_t>)(benchmark::State& state) {
-    benchmark_query<SSFE_DONG<uint64_t>>(ssfe, kvs, state);
+// xorsepdyn query
+BENCHMARK_TEMPLATE_DEFINE_F(BuildFixture, xorsepdyn_query, XorSepDyn<uint64_t>)(benchmark::State& state) {
+    benchmark_query<XorSepDyn<uint64_t>>(sep, kvs, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_dong_query)->Apply(args_50m);
+BENCHMARK_REGISTER_F(BuildFixture, xorsepdyn_query)->Apply(args_50m);
 
-// ssfe_dong query batch
-BENCHMARK_TEMPLATE_DEFINE_F(SSFEBuildFixture, ssfe_dong_query_batch, SSFE_DONG<uint64_t>)(benchmark::State& state) {
-    benchmark_query_batch<SSFE_DONG<uint64_t>>(ssfe, kvs, state);
+// xorsepdyn query batch
+BENCHMARK_TEMPLATE_DEFINE_F(BuildFixture, xorsepdyn_query_batch, XorSepDyn<uint64_t>)(benchmark::State& state) {
+    benchmark_query_batch<XorSepDyn<uint64_t>>(sep, kvs, state);
 }
-BENCHMARK_REGISTER_F(SSFEBuildFixture, ssfe_dong_query_batch)->Apply(args_200m);
+BENCHMARK_REGISTER_F(BuildFixture, xorsepdyn_query_batch)->Apply(args_200m);
 
-// ssfe_dong build
-BENCHMARK_TEMPLATE(BM_ssfe_build, SSFE_DONG<uint64_t>)->Apply(args_10m);
+// xorsepdyn build
+BENCHMARK_TEMPLATE(BM_build, XorSepDyn<uint64_t>)->Apply(args_10m);
 
 // ************
 // * stdmap

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "ssfehash/hash_family.h"
+#include "xorsep/hash_family.h"
 #include "xxhash.h"
 
 template <class HASH_FAMILY>
