@@ -11,7 +11,7 @@ void run(int n = 256 / 1.4, int m = 256) {
         typedef MixFamily2<uint64_t, 10> HASH;
 
         std::vector<std::pair<uint64_t, bool>> kvs =
-            generate_keyvalues(n, true, round);
+            generate_keyvalues(n, false, round);
         uint8_t *data = new uint8_t[256 / 8];
 
         // find a feasible seed
@@ -39,7 +39,8 @@ void run(int n = 256 / 1.4, int m = 256) {
 }
 
 int main() {
-    run(256 / 1.4, 256);
-    run(256 / 1.1, 256);
+    for (int i = 150; i < 240; i++) {
+        run(i, 256);
+    }
     return 0;
 }

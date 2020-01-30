@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
+import subprocess
 import tempfile
 
 # parse the benchmark output and return the datafram
@@ -95,18 +96,58 @@ def plot_gaussian_elimination(df):
     ax.set_xticks(y_pos)
     ax.set_xticklabels(['naive', 'bitset', 'bitset+col'])
     ax.set_ylabel('keys/sec')
-    ax.set_title('Gauss Elimination Performance\nrows/keys=182, cols=256\n')
+    ax.set_title('Gauss Elimination Performance\n#ows(keys)=182, #cols=256\n')
     ax.grid(True, axis='y')
 
     # save
     fig.savefig("gauss_elimination.pdf", bbox_inches='tight')
 
+def plot_cancels():
+    p = subprocess.run(["bazel", "run", "//:group_exp_cancles"], stdout=subprocess.PIPE)
+    assert(p.returncode == 0)
+    n_x = []
+    cancles_y = []
+
+    # parse the output
+    # sample output:
+    # n = 232, m = 256, #cancles in Gaussian Elimination = 1215.910
+    # n = 233, m = 256, #cancles in Gaussian Elimination = 1165.770
+    for l in p.stdout.decode().splitlines():
+        if l.startswith("n = "):
+            n, m, cancles = l.split(",")
+            n = int(n.split()[-1])
+            m = int(m.split()[-1])
+            cancles = float(cancles.split()[-1])
+
+            n_x.append(n)
+            cancles_y.append(cancles)
+            assert(m == 256)
+    
+
+    # plot
+    matplotlib.rcParams.update({'font.size': 20}) 
+    fig, ax = plt.subplots(1, 1)
+    ax.grid(True, axis='both')
+    ax.set_xlabel("# Keys (Rows)")
+    ax.set_ylabel("# Cancels")
+    ax.set_title("Expected number of cancels in\nGauss Elimination\n#cols = 256")
+    ax.plot(n_x, cancles_y, color='teal')
+    # save
+    fig.savefig("cancles.pdf", bbox_inches='tight')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--csv', type=str, help='The benchmark output file path.')
+    parser.add_argument('--filter', type=str, default="", help='Run only the plots whose name contains the filter')
     args = parser.parse_args()
 
-    log = parse_bench_csv(args.csv)
-    plot_query(log)
-    plot_gaussian_elimination(log)
+    if args.filter in  plot_query.__name__:
+        log = parse_bench_csv(args.csv)
+        plot_query(log)
+
+    if args.filter in plot_gaussian_elimination.__name__:
+        log = parse_bench_csv(args.csv)
+        plot_gaussian_elimination(log)
+
+    if args.filter in plot_cancels.__name__:
+        plot_cancels()
